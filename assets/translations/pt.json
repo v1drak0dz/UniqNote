@@ -5,5 +5,15 @@
     "image": "Imagem",
     "video": "Video",
     "file": "Arquivo",
-    "audio": "Audio"
+    "audio": "Audio",
+
+    "theme": "Tema",
+    "apply": "Aplicar",
+
+    "color_blue": "Azul",
+    "color_red": "Vermelho",
+    "color_green": "Verde",
+    "color_orange": "Laranja",
+    "color_purple": "Roxo",
+    "color_teal": "Ciano"
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:uniqnote/helpers/db_helper.dart';
 import 'package:uniqnote/pages/new_note_page.dart';
@@ -22,26 +23,93 @@ void main() async {
   );
 }
 
-class MyApp extends StatelessWidget {
+//////////////////////////////////////////////////////////////
+/// MODELO DE OPÇÃO DE TEMA
+//////////////////////////////////////////////////////////////
+
+class ThemeOption {
+  final String translationKey;
+  final Color color;
+
+  const ThemeOption(this.translationKey, this.color);
+}
+
+//////////////////////////////////////////////////////////////
+/// CORES DISPONÍVEIS
+//////////////////////////////////////////////////////////////
+
+const themeOptions = [
+  ThemeOption("color_blue", Colors.blue),
+  ThemeOption("color_red", Colors.red),
+  ThemeOption("color_green", Colors.green),
+  ThemeOption("color_orange", Colors.orange),
+  ThemeOption("color_purple", Colors.purple),
+  ThemeOption("color_teal", Colors.teal),
+];
+
+//////////////////////////////////////////////////////////////
+/// APP ROOT
+//////////////////////////////////////////////////////////////
+
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  static _MyAppState of(BuildContext context) =>
+      context.findAncestorStateOfType<_MyAppState>()!;
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  int themeIndex = 0;
+
+  Color get seedColor => themeOptions[themeIndex].color;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTheme();
+  }
+
+  Future<void> _loadTheme() async {
+    final prefs = await SharedPreferences.getInstance();
+    final index = prefs.getInt('theme_index');
+
+    if (index != null && index < themeOptions.length) {
+      setState(() {
+        themeIndex = index;
+      });
+    }
+  }
+
+  Future<void> changeThemeIndex(int index) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    await prefs.setInt('theme_index', index);
+
+    setState(() {
+      themeIndex = index;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: HomePage(),
       locale: context.locale,
       localizationsDelegates: context.localizationDelegates,
       supportedLocales: context.supportedLocales,
+      home: HomePage(),
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue,
+          seedColor: seedColor,
           brightness: Brightness.light,
         ),
         useMaterial3: true,
       ),
       darkTheme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue,
+          seedColor: seedColor,
           brightness: Brightness.dark,
         ),
         useMaterial3: true,
@@ -50,6 +118,10 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
+//////////////////////////////////////////////////////////////
+/// HOME PAGE
+//////////////////////////////////////////////////////////////
 
 class HomePage extends StatefulWidget {
   @override
@@ -78,22 +150,104 @@ class _HomePageState extends State<HomePage> {
       context,
       MaterialPageRoute(builder: (_) => EditNotePage(note: note)),
     );
+
     if (updated == true) {
       _loadNotes();
     }
   }
 
+  //////////////////////////////////////////////////////////////
+  /// MODAL DE SELEÇÃO DE TEMA
+  //////////////////////////////////////////////////////////////
+
+  Future<void> _openThemeSelector() async {
+    int selectedIndex = MyApp.of(context).themeIndex;
+
+    await showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      tr("theme"),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    ////////////////////////////////////////////////////
+                    /// LISTA DE CORES
+                    ////////////////////////////////////////////////////
+                    ...List.generate(themeOptions.length, (index) {
+                      final option = themeOptions[index];
+
+                      return RadioListTile<int>(
+                        value: index,
+                        groupValue: selectedIndex,
+                        onChanged: (value) {
+                          if (value == null) return;
+
+                          setModalState(() {
+                            selectedIndex = value;
+                          });
+                        },
+                        title: Row(
+                          children: [
+                            Container(
+                              width: 22,
+                              height: 22,
+                              decoration: BoxDecoration(
+                                color: option.color,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Text(tr(option.translationKey)),
+                          ],
+                        ),
+                      );
+                    }),
+
+                    const SizedBox(height: 8),
+
+                    ElevatedButton(
+                      onPressed: () {
+                        MyApp.of(context).changeThemeIndex(selectedIndex);
+                        Navigator.pop(context);
+                      },
+                      child: Text(tr("apply")),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  //////////////////////////////////////////////////////////////
+
   @override
   Widget build(BuildContext context) {
     final filteredNotes = notes.where((n) {
-      final name = (n.title).toLowerCase();
-      return name.contains(query.toLowerCase());
+      return n.title.toLowerCase().contains(query.toLowerCase());
     }).toList();
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          "notes".tr(),
+          tr("notes"),
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: Theme.of(context).colorScheme.onPrimaryContainer,
@@ -101,6 +255,20 @@ class _HomePageState extends State<HomePage> {
         ),
         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
         actions: [
+          ////////////////////////////////////////////////////
+          /// BOTÃO TEMA
+          ////////////////////////////////////////////////////
+          IconButton(
+            icon: Icon(
+              Icons.palette,
+              color: Theme.of(context).colorScheme.onPrimaryContainer,
+            ),
+            onPressed: _openThemeSelector,
+          ),
+
+          ////////////////////////////////////////////////////
+          /// BOTÃO SEARCH
+          ////////////////////////////////////////////////////
           IconButton(
             icon: Icon(
               Icons.search,
@@ -115,9 +283,10 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
+
       body: SafeArea(
         child: filteredNotes.isEmpty
-            ? Center(
+            ? const Center(
                 child: Icon(
                   Icons.description_outlined,
                   size: 96,
@@ -125,7 +294,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               )
             : Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding: const EdgeInsets.all(8),
                 child: MasonryGridView.count(
                   crossAxisCount: 2,
                   mainAxisSpacing: 8,
@@ -137,67 +306,23 @@ class _HomePageState extends State<HomePage> {
 
                     return GestureDetector(
                       onTap: () => _openNote(note),
-                      onLongPress: () {
-                        showModalBottomSheet(
-                          context: context,
-                          builder: (modalContext) {
-                            return SafeArea(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  ListTile(
-                                    leading: const Icon(Icons.favorite),
-                                    title: Text(tr("favorite")),
-                                    onTap: () async {
-                                      await DBHelper.favoriteNode(note.id);
-
-                                      Navigator.pop(modalContext);
-                                      _loadNotes();
-                                    },
-                                  ),
-                                  ListTile(
-                                    leading: const Icon(Icons.delete),
-                                    title: Text(tr("delete")),
-                                    onTap: () async {
-                                      await DBHelper.deleteNote(note.id);
-                                      Navigator.pop(modalContext);
-                                      _loadNotes();
-                                    },
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        );
-                      },
                       child: Card(
                         elevation: 2,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Padding(
-                          padding: const EdgeInsets.all(10.0),
+                          padding: const EdgeInsets.all(10),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    note.title,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  note.isFavorite == 1
-                                      ? Icon(Icons.favorite)
-                                      : Text(""),
-                                ],
+                              Text(
+                                note.title,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
                               ),
-
                               const SizedBox(height: 4),
                               Text(
                                 "${date.day}/${date.month}/${date.year}",
@@ -205,31 +330,6 @@ class _HomePageState extends State<HomePage> {
                                   fontSize: 12,
                                   color: Colors.grey[600],
                                 ),
-                              ),
-                              const SizedBox(height: 6),
-                              Wrap(
-                                spacing: 4,
-                                children: note.attachments.map((att) {
-                                  switch (att.type) {
-                                    case AttachmentType.image:
-                                      return const Icon(Icons.image, size: 16);
-                                    case AttachmentType.audio:
-                                      return const Icon(
-                                        Icons.audiotrack,
-                                        size: 16,
-                                      );
-                                    case AttachmentType.file:
-                                      return const Icon(
-                                        Icons.attach_file,
-                                        size: 16,
-                                      );
-                                    case AttachmentType.video:
-                                      return const Icon(
-                                        Icons.videocam,
-                                        size: 16,
-                                      );
-                                  }
-                                }).toList(),
                               ),
                             ],
                           ),
@@ -240,6 +340,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
       ),
+
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           await Navigator.push(
@@ -253,6 +354,10 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
+
+//////////////////////////////////////////////////////////////
+/// SEARCH
+//////////////////////////////////////////////////////////////
 
 class NotesSearchDelegate extends SearchDelegate<String> {
   final List<Note> notes;
@@ -284,63 +389,15 @@ class NotesSearchDelegate extends SearchDelegate<String> {
   @override
   Widget buildSuggestions(BuildContext context) {
     final suggestions = notes.where((n) {
-      final name = (n.title).toLowerCase();
-      return name.contains(query.toLowerCase());
+      return n.title.toLowerCase().contains(query.toLowerCase());
     }).toList();
 
     return ListView.builder(
       itemCount: suggestions.length,
       itemBuilder: (_, i) {
         final note = suggestions[i];
-        final date = note.createdAt;
 
-        return GestureDetector(
-          onTap: () => onOpenNote(note),
-          child: Card(
-            elevation: 2,
-            margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    note.title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    "${date.day}/${date.month}/${date.year}",
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                  ),
-                  const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 4,
-                    children: note.attachments.map((att) {
-                      switch (att.type) {
-                        case AttachmentType.image:
-                          return const Icon(Icons.image, size: 16);
-                        case AttachmentType.audio:
-                          return const Icon(Icons.audiotrack, size: 16);
-                        case AttachmentType.file:
-                          return const Icon(Icons.attach_file, size: 16);
-                        case AttachmentType.video:
-                          return const Icon(Icons.videocam, size: 16);
-                      }
-                    }).toList(),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
+        return ListTile(title: Text(note.title), onTap: () => onOpenNote(note));
       },
     );
   }
