@@ -1,7 +1,7 @@
 name: uniqnote
 description: "A simple note-taking app that born to be minimalist with cool features."
 publish_to: "none"
-version: 1.2.1
+version: 1.2.2
 
 environment:
   sdk: ^3.10.1

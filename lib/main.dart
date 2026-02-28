@@ -140,7 +140,7 @@ class _HomePageState extends State<HomePage> {
                       onLongPress: () {
                         showModalBottomSheet(
                           context: context,
-                          builder: (context) {
+                          builder: (modalContext) {
                             return SafeArea(
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
@@ -148,12 +148,21 @@ class _HomePageState extends State<HomePage> {
                                   ListTile(
                                     leading: const Icon(Icons.favorite),
                                     title: Text(tr("favorite")),
-                                    onTap: () => DBHelper.favoriteNode(note.id),
+                                    onTap: () async {
+                                      await DBHelper.favoriteNode(note.id);
+
+                                      Navigator.pop(modalContext);
+                                      _loadNotes();
+                                    },
                                   ),
                                   ListTile(
                                     leading: const Icon(Icons.delete),
                                     title: Text(tr("delete")),
-                                    onTap: () => DBHelper.deleteNote(note.id),
+                                    onTap: () async {
+                                      await DBHelper.deleteNote(note.id);
+                                      Navigator.pop(modalContext);
+                                      _loadNotes();
+                                    },
                                   ),
                                 ],
                               ),
