@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 import 'package:uniqnote/helpers/db_helper.dart';
 import 'package:uniqnote/pages/new_note_page.dart';
@@ -8,32 +8,48 @@ import 'package:uniqnote/pages/edit_note_page.dart';
 import 'package:uniqnote/models/note.dart';
 import 'package:uniqnote/models/attachment.dart';
 
-void main() => runApp(
-  MaterialApp(
-    home: HomePage(),
-    localizationsDelegates: const [
-      GlobalMaterialLocalizations.delegate,
-      GlobalWidgetsLocalizations.delegate,
-      GlobalCupertinoLocalizations.delegate,
-    ],
-    supportedLocales: const [Locale('en', 'US'), Locale('pt', 'BR')],
-    theme: ThemeData(
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: Colors.blue,
-        brightness: Brightness.light,
-      ),
-      useMaterial3: true,
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await EasyLocalization.ensureInitialized();
+
+  runApp(
+    EasyLocalization(
+      supportedLocales: const [Locale('en'), Locale('pt')],
+      path: 'assets/translations',
+      fallbackLocale: const Locale('en'),
+      child: const MyApp(),
     ),
-    darkTheme: ThemeData(
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: Colors.blue,
-        brightness: Brightness.dark,
+  );
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: HomePage(),
+      locale: context.locale,
+      localizationsDelegates: context.localizationDelegates,
+      supportedLocales: context.supportedLocales,
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.blue,
+          brightness: Brightness.light,
+        ),
+        useMaterial3: true,
       ),
-      useMaterial3: true,
-    ),
-    themeMode: ThemeMode.system,
-  ),
-);
+      darkTheme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.blue,
+          brightness: Brightness.dark,
+        ),
+        useMaterial3: true,
+      ),
+      themeMode: ThemeMode.system,
+    );
+  }
+}
 
 class HomePage extends StatefulWidget {
   @override
@@ -77,7 +93,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          "Notes",
+          "notes".tr(),
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: Theme.of(context).colorScheme.onPrimaryContainer,
@@ -121,6 +137,32 @@ class _HomePageState extends State<HomePage> {
 
                     return GestureDetector(
                       onTap: () => _openNote(note),
+                      onLongPress: () {
+                        showModalBottomSheet(
+                          context: context,
+                          builder: (context) {
+                            return SafeArea(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  ListTile(
+                                    leading: const Icon(Icons.favorite),
+                                    title: Text(tr("favorite")),
+                                    onTap: () async =>
+                                        await DBHelper.favoriteNode(note.id),
+                                  ),
+                                  ListTile(
+                                    leading: const Icon(Icons.delete),
+                                    title: Text(tr("delete")),
+                                    onTap: () async =>
+                                        await DBHelper.deleteNote(note.id),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        );
+                      },
                       child: Card(
                         elevation: 2,
                         shape: RoundedRectangleBorder(
@@ -132,13 +174,21 @@ class _HomePageState extends State<HomePage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text(
-                                note.title,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
+                              Row(
+                                children: [
+                                  Text(
+                                    note.title,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  note.isFavorite == 1
+                                      ? Icon(Icons.favorite)
+                                      : Text(""),
+                                ],
                               ),
+
                               const SizedBox(height: 4),
                               Text(
                                 "${date.day}/${date.month}/${date.year}",
@@ -148,7 +198,6 @@ class _HomePageState extends State<HomePage> {
                                 ),
                               ),
                               const SizedBox(height: 6),
-                              // Ícones dos anexos
                               Wrap(
                                 spacing: 4,
                                 children: note.attachments.map((att) {

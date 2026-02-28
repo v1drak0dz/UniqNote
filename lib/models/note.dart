@@ -6,6 +6,7 @@ class Note {
   final String content;
   final DateTime createdAt;
   final DateTime modifiedAt;
+  final int isFavorite;
   final List<Attachment> attachments;
 
   Note({
@@ -14,6 +15,7 @@ class Note {
     required this.content,
     required this.createdAt,
     required this.modifiedAt,
+    this.isFavorite = 0,
     this.attachments = const [],
   });
 }

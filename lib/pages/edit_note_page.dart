@@ -4,6 +4,7 @@ import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:open_filex/open_filex.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 import 'package:uniqnote/helpers/db_helper.dart';
 import 'package:uniqnote/models/attachment.dart';
@@ -148,7 +149,7 @@ class _EditNotePageState extends State<EditNotePage> {
                           return Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: ActionChip(
-                              label: const Text("Áudio"),
+                              label: Text(tr("audio")),
                               onPressed: () => _openFile(attachment.filePath),
                             ),
                           );
@@ -156,7 +157,7 @@ class _EditNotePageState extends State<EditNotePage> {
                           return Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: ActionChip(
-                              label: const Text("Arquivo"),
+                              label: Text(tr("file")),
                               onPressed: () => _openFile(attachment.filePath),
                             ),
                           );
@@ -164,7 +165,7 @@ class _EditNotePageState extends State<EditNotePage> {
                           return Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: ActionChip(
-                              label: const Text("Vídeo"),
+                              label: Text(tr("video")),
                               onPressed: () => _openFile(attachment.filePath),
                             ),
                           );
@@ -198,22 +199,22 @@ class _EditNotePageState extends State<EditNotePage> {
         children: [
           SpeedDialChild(
             child: const Icon(Icons.image),
-            label: "Imagem",
+            label: tr("imagem"),
             onTap: _addImage,
           ),
           SpeedDialChild(
             child: const Icon(Icons.videocam),
-            label: "Vídeo",
+            label: tr("video"),
             onTap: _addVideo,
           ),
           SpeedDialChild(
             child: const Icon(Icons.mic),
-            label: "Áudio",
+            label: tr("audio"),
             onTap: _addAudio,
           ),
           SpeedDialChild(
             child: const Icon(Icons.attach_file),
-            label: "Arquivo",
+            label: tr("file"),
             onTap: _addFile,
           ),
         ],

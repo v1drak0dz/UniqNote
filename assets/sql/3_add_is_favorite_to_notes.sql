@@ -1,0 +1,1 @@
+ALTER TABLE notes ADD COLUMN is_favorite INTEGER DEFAULT 0;

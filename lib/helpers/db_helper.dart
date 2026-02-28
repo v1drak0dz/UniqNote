@@ -33,7 +33,6 @@ class DBHelper {
     return await openDatabase(path, version: 2);
   }
 
-  /// Inserir nota com anexos
   static Future<int> insertNote(
     String title,
     String content,
@@ -65,14 +64,12 @@ class DBHelper {
     List<Note> notes = [];
 
     for (var noteMap in notesRaw) {
-      // Buscar anexos da nota
       final attachmentsRaw = await db.query(
         'attachments',
         where: 'note_id = ?',
         whereArgs: [noteMap['id']],
       );
 
-      // Converter cada anexo em objeto Attachment
       final attachments = attachmentsRaw.map((att) {
         return Attachment(
           type: AttachmentType.values.firstWhere(
@@ -82,7 +79,6 @@ class DBHelper {
         );
       }).toList();
 
-      // Montar objeto Note
       notes.add(
         Note(
           id: noteMap['id'] as int,
@@ -117,7 +113,6 @@ class DBHelper {
       whereArgs: [id],
     );
 
-    // Remove anexos antigos e insere os novos
     await db.delete('attachments', where: 'note_id = ?', whereArgs: [id]);
     for (var attachment in attachments) {
       await db.insert('attachments', {
@@ -130,11 +125,24 @@ class DBHelper {
     return result;
   }
 
-  /// Deletar nota e anexos vinculados
   static Future<int> deleteNote(int id) async {
     final db = await database;
-    // Deletar anexos primeiro (ON DELETE CASCADE também cobre isso)
     await db.delete('attachments', where: 'note_id = ?', whereArgs: [id]);
     return await db.delete('notes', where: 'id = ?', whereArgs: [id]);
+  }
+
+  static Future<int> favoriteNode(int id) async {
+    final db = await database;
+    return await db.rawUpdate(
+      '''
+      UPDATE notes
+         SET is_favorite = CASE is_favorite
+             WHEN 1 THEN 0
+             ELSE 1
+         END
+       WHERE id = ?
+      ''',
+      [id],
+    );
   }
 }
