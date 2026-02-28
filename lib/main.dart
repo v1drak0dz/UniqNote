@@ -148,14 +148,12 @@ class _HomePageState extends State<HomePage> {
                                   ListTile(
                                     leading: const Icon(Icons.favorite),
                                     title: Text(tr("favorite")),
-                                    onTap: () async =>
-                                        await DBHelper.favoriteNode(note.id),
+                                    onTap: () => DBHelper.favoriteNode(note.id),
                                   ),
                                   ListTile(
                                     leading: const Icon(Icons.delete),
                                     title: Text(tr("delete")),
-                                    onTap: () async =>
-                                        await DBHelper.deleteNote(note.id),
+                                    onTap: () => DBHelper.deleteNote(note.id),
                                   ),
                                 ],
                               ),
@@ -175,6 +173,8 @@ class _HomePageState extends State<HomePage> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
                                     note.title,

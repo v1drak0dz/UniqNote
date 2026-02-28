@@ -20,6 +20,7 @@ class DBHelper {
       migrationFiles: [
         '1_create_notes_table.sql',
         '2_create_attachments_table.sql',
+        '3_add_is_favorite_to_notes.sql',
       ],
     );
 
@@ -59,7 +60,10 @@ class DBHelper {
 
   static Future<List<Note>> getNotesWithAttachments() async {
     final db = await database;
-    final notesRaw = await db.query('notes', orderBy: 'modified_at DESC');
+    final notesRaw = await db.query(
+      'notes',
+      orderBy: 'is_favorite DESC, modified_at DESC',
+    );
 
     List<Note> notes = [];
 
@@ -87,6 +91,7 @@ class DBHelper {
           createdAt: DateTime.parse(noteMap['created_at'] as String),
           modifiedAt: DateTime.parse(noteMap['modified_at'] as String),
           attachments: attachments,
+          isFavorite: noteMap['is_favorite'] as int,
         ),
       );
     }
