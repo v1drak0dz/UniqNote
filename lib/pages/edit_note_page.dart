@@ -5,7 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:open_filex/open_filex.dart';
 
-import 'package:uniqnote/helpers/storage.dart';
+import 'package:uniqnote/helpers/db_helper.dart';
 import 'package:uniqnote/models/attachment.dart';
 import 'package:uniqnote/models/note.dart';
 
@@ -129,47 +129,49 @@ class _EditNotePageState extends State<EditNotePage> {
             ),
           ),
           const Divider(),
-          SizedBox(
-            height: 100,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: attachments.length,
-              itemBuilder: (context, index) {
-                final attachment = attachments[index];
-                switch (attachment.type) {
-                  case AttachmentType.image:
-                    return Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Image.file(File(attachment.filePath)),
-                    );
-                  case AttachmentType.audio:
-                    return Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: ActionChip(
-                        label: const Text("Áudio"),
-                        onPressed: () => _openFile(attachment.filePath),
-                      ),
-                    );
-                  case AttachmentType.file:
-                    return Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: ActionChip(
-                        label: const Text("Arquivo"),
-                        onPressed: () => _openFile(attachment.filePath),
-                      ),
-                    );
-                  case AttachmentType.video:
-                    return Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: ActionChip(
-                        label: const Text("Vídeo"),
-                        onPressed: () => _openFile(attachment.filePath),
-                      ),
-                    );
-                }
-              },
-            ),
-          ),
+          attachments.isEmpty
+              ? const SizedBox.shrink()
+              : SizedBox(
+                  height: 100,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: attachments.length,
+                    itemBuilder: (context, index) {
+                      final attachment = attachments[index];
+                      switch (attachment.type) {
+                        case AttachmentType.image:
+                          return Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Image.file(File(attachment.filePath)),
+                          );
+                        case AttachmentType.audio:
+                          return Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: ActionChip(
+                              label: const Text("Áudio"),
+                              onPressed: () => _openFile(attachment.filePath),
+                            ),
+                          );
+                        case AttachmentType.file:
+                          return Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: ActionChip(
+                              label: const Text("Arquivo"),
+                              onPressed: () => _openFile(attachment.filePath),
+                            ),
+                          );
+                        case AttachmentType.video:
+                          return Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: ActionChip(
+                              label: const Text("Vídeo"),
+                              onPressed: () => _openFile(attachment.filePath),
+                            ),
+                          );
+                      }
+                    },
+                  ),
+                ),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(

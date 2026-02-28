@@ -1,4 +1,6 @@
 import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_migration_service/sqflite_migration_service.dart'
+    as mig;
 import 'package:path/path.dart';
 
 import 'package:uniqnote/models/attachment.dart';
@@ -10,6 +12,17 @@ class DBHelper {
   static Future<Database> get database async {
     if (_db != null) return _db!;
     _db = await _initDB();
+
+    final migrationService = mig.DatabaseMigrationService();
+
+    await migrationService.runMigration(
+      _db,
+      migrationFiles: [
+        '1_create_notes_table.sql',
+        '2_create_attachments_table.sql',
+      ],
+    );
+
     return _db!;
   }
 
@@ -17,33 +30,7 @@ class DBHelper {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'notes.db');
 
-    return await openDatabase(
-      path,
-      version: 1,
-      onCreate: (db, version) async {
-        // Tabela principal de notas
-        await db.execute('''
-          CREATE TABLE notes (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT,
-            content TEXT,
-            created_at TEXT,
-            modified_at TEXT
-          )
-        ''');
-
-        // Tabela de anexos vinculados às notas
-        await db.execute('''
-          CREATE TABLE attachments (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            note_id INTEGER,
-            type TEXT,
-            file_path TEXT,
-            FOREIGN KEY (note_id) REFERENCES notes (id) ON DELETE CASCADE
-          )
-        ''');
-      },
-    );
+    return await openDatabase(path, version: 2);
   }
 
   /// Inserir nota com anexos

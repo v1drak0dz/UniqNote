@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
-import 'package:uniqnote/helpers/storage.dart';
+import 'package:uniqnote/helpers/db_helper.dart';
 import 'package:uniqnote/pages/new_note_page.dart';
 import 'package:uniqnote/pages/edit_note_page.dart';
 import 'package:uniqnote/models/note.dart';
