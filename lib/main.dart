@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
-import 'helpers/storage.dart';
-import 'pages/new_note_page.dart';
-import 'pages/edit_note_page.dart';
+import 'package:uniqnote/helpers/storage.dart';
+import 'package:uniqnote/pages/new_note_page.dart';
+import 'package:uniqnote/pages/edit_note_page.dart';
+import 'package:uniqnote/models/note.dart';
+import 'package:uniqnote/models/attachment.dart';
 
 void main() => runApp(
   MaterialApp(
@@ -14,24 +16,20 @@ void main() => runApp(
       GlobalWidgetsLocalizations.delegate,
       GlobalCupertinoLocalizations.delegate,
     ],
-    supportedLocales: const [Locale('en', ''), Locale('pt', '')],
-
+    supportedLocales: const [Locale('en', 'US'), Locale('pt', 'BR')],
     theme: ThemeData(
-      brightness: Brightness.light,
-      primarySwatch: Colors.blue,
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Colors.blue,
+        brightness: Brightness.light,
       ),
+      useMaterial3: true,
     ),
     darkTheme: ThemeData(
-      brightness: Brightness.dark,
-      primarySwatch: Colors.deepPurple,
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Colors.blue,
+        brightness: Brightness.dark,
       ),
-      cardColor: Colors.grey[900],
+      useMaterial3: true,
     ),
     themeMode: ThemeMode.system,
   ),
@@ -43,7 +41,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  List<Map<String, dynamic>> notes = [];
+  List<Note> notes = [];
   String query = "";
 
   @override
@@ -53,13 +51,13 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _loadNotes() async {
-    final data = await DBHelper.getNotes();
+    final data = await DBHelper.getNotesWithAttachments();
     setState(() {
       notes = data;
     });
   }
 
-  void _openNote(Map<String, dynamic> note) async {
+  void _openNote(Note note) async {
     final updated = await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => EditNotePage(note: note)),
@@ -72,16 +70,26 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final filteredNotes = notes.where((n) {
-      final name = (n['title'] ?? "").toLowerCase();
+      final name = (n.title).toLowerCase();
       return name.contains(query.toLowerCase());
     }).toList();
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("Notes"),
+        title: Text(
+          "Notes",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.onPrimaryContainer,
+          ),
+        ),
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
         actions: [
           IconButton(
-            icon: Icon(Icons.search),
+            icon: Icon(
+              Icons.search,
+              color: Theme.of(context).colorScheme.onPrimaryContainer,
+            ),
             onPressed: () async {
               await showSearch(
                 context: context,
@@ -109,8 +117,7 @@ class _HomePageState extends State<HomePage> {
                   itemCount: filteredNotes.length,
                   itemBuilder: (_, i) {
                     final note = filteredNotes[i];
-                    final name = note['title'];
-                    final date = DateTime.parse(note['createdAt']);
+                    final date = note.createdAt;
 
                     return GestureDetector(
                       onTap: () => _openNote(note),
@@ -126,19 +133,45 @@ class _HomePageState extends State<HomePage> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                name,
-                                style: TextStyle(
+                                note.title,
+                                style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 14,
                                 ),
                               ),
-                              SizedBox(height: 4),
+                              const SizedBox(height: 4),
                               Text(
                                 "${date.day}/${date.month}/${date.year}",
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Colors.grey[600],
                                 ),
+                              ),
+                              const SizedBox(height: 6),
+                              // Ícones dos anexos
+                              Wrap(
+                                spacing: 4,
+                                children: note.attachments.map((att) {
+                                  switch (att.type) {
+                                    case AttachmentType.image:
+                                      return const Icon(Icons.image, size: 16);
+                                    case AttachmentType.audio:
+                                      return const Icon(
+                                        Icons.audiotrack,
+                                        size: 16,
+                                      );
+                                    case AttachmentType.file:
+                                      return const Icon(
+                                        Icons.attach_file,
+                                        size: 16,
+                                      );
+                                    case AttachmentType.video:
+                                      return const Icon(
+                                        Icons.videocam,
+                                        size: 16,
+                                      );
+                                  }
+                                }).toList(),
                               ),
                             ],
                           ),
@@ -153,31 +186,33 @@ class _HomePageState extends State<HomePage> {
         onPressed: () async {
           await Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => NewNotePage()),
+            MaterialPageRoute(builder: (_) => const NewNotePage()),
           );
           _loadNotes();
         },
-        child: Icon(Icons.edit),
+        child: const Icon(Icons.edit),
       ),
     );
   }
 }
 
 class NotesSearchDelegate extends SearchDelegate<String> {
-  final List<Map<String, dynamic>> notes;
-  final void Function(Map<String, dynamic>) onOpenNote;
+  final List<Note> notes;
+  final void Function(Note) onOpenNote;
 
   NotesSearchDelegate(this.notes, this.onOpenNote);
 
   @override
   List<Widget> buildActions(BuildContext context) {
-    return [IconButton(icon: Icon(Icons.clear), onPressed: () => query = "")];
+    return [
+      IconButton(icon: const Icon(Icons.clear), onPressed: () => query = ""),
+    ];
   }
 
   @override
   Widget buildLeading(BuildContext context) {
     return IconButton(
-      icon: Icon(Icons.arrow_back),
+      icon: const Icon(Icons.arrow_back),
       onPressed: () => close(context, ""),
     );
   }
@@ -191,7 +226,7 @@ class NotesSearchDelegate extends SearchDelegate<String> {
   @override
   Widget buildSuggestions(BuildContext context) {
     final suggestions = notes.where((n) {
-      final name = (n['title'] ?? "").toLowerCase();
+      final name = (n.title).toLowerCase();
       return name.contains(query.toLowerCase());
     }).toList();
 
@@ -199,14 +234,13 @@ class NotesSearchDelegate extends SearchDelegate<String> {
       itemCount: suggestions.length,
       itemBuilder: (_, i) {
         final note = suggestions[i];
-        final name = note['title'];
-        final date = DateTime.parse(note['createdAt']);
+        final date = note.createdAt;
 
         return GestureDetector(
           onTap: () => onOpenNote(note),
           child: Card(
             elevation: 2,
-            margin: EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
+            margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
             ),
@@ -217,13 +251,32 @@ class NotesSearchDelegate extends SearchDelegate<String> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    name,
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    note.title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
                     "${date.day}/${date.month}/${date.year}",
                     style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  ),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 4,
+                    children: note.attachments.map((att) {
+                      switch (att.type) {
+                        case AttachmentType.image:
+                          return const Icon(Icons.image, size: 16);
+                        case AttachmentType.audio:
+                          return const Icon(Icons.audiotrack, size: 16);
+                        case AttachmentType.file:
+                          return const Icon(Icons.attach_file, size: 16);
+                        case AttachmentType.video:
+                          return const Icon(Icons.videocam, size: 16);
+                      }
+                    }).toList(),
                   ),
                 ],
               ),
