@@ -11,8 +11,8 @@ Project Description
 - [ ] visualizacao detalhada com preview completo dos anexos
 - [ ] exportar/compartilhar notas em pdf ou texto
 - [ ] sincronizacao
-- [ ] favoritos ou pinagem para manter notas importantes no topo
-- [ ] Tgas ou categorias para organizar notas
+- [x] favoritos ou pinagem para manter notas importantes no topo
+- [ ] Tags/categorias/pastas para organizar notas
 - [ ] Busca de conteudo na nota
 - [ ] Suporte a AMOLED
 - [ ] Cores Dinamicas (MAterial You)
