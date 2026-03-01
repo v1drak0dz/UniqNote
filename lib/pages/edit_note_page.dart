@@ -128,6 +128,9 @@ class _EditNotePageState extends State<EditNotePage> {
           IconButton(icon: const Icon(Icons.save), onPressed: _save),
           IconButton(icon: const Icon(Icons.delete), onPressed: _delete),
         ],
+
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
       ),
       body: Column(
         children: [
@@ -216,27 +219,36 @@ class _EditNotePageState extends State<EditNotePage> {
       floatingActionButton: SpeedDial(
         icon: Icons.add,
         activeIcon: Icons.close,
-        backgroundColor: Colors.blue,
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
         children: [
           SpeedDialChild(
             child: const Icon(Icons.image),
-            label: tr("imagem"),
+            label: tr("image"),
             onTap: _addImage,
+            backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+            foregroundColor: Theme.of(context).colorScheme.onSecondaryContainer,
           ),
           SpeedDialChild(
             child: const Icon(Icons.videocam),
             label: tr("video"),
             onTap: _addVideo,
+            backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+            foregroundColor: Theme.of(context).colorScheme.onSecondaryContainer,
           ),
           SpeedDialChild(
             child: const Icon(Icons.mic),
             label: tr("audio"),
             onTap: _addAudio,
+            backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+            foregroundColor: Theme.of(context).colorScheme.onSecondaryContainer,
           ),
           SpeedDialChild(
             child: const Icon(Icons.attach_file),
             label: tr("file"),
             onTap: _addFile,
+            backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+            foregroundColor: Theme.of(context).colorScheme.onSecondaryContainer,
           ),
         ],
       ),

@@ -281,7 +281,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                 color: Theme.of(context).colorScheme.onPrimaryContainer,
               ),
             ),
-            Text("v$appVersion", style: TextStyle(fontSize: 8.0)),
           ],
         ),
 

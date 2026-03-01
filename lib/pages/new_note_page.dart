@@ -22,6 +22,8 @@ class NewNotePage extends StatefulWidget {
 class _NewNotePageState extends State<NewNotePage> {
   final titleController = TextEditingController();
   final contentController = TextEditingController();
+  final dummyTitle = tr("your_title");
+  final timestampTitle = generateTitle();
 
   // Lista de anexos
   List<Attachment> attachments = [];
@@ -29,7 +31,7 @@ class _NewNotePageState extends State<NewNotePage> {
   @override
   void initState() {
     super.initState();
-    titleController.text = "$generateTitle() - $tr('your_title')";
+    titleController.text = "$timestampTitle - $dummyTitle";
   }
 
   void _save() async {
@@ -115,6 +117,8 @@ class _NewNotePageState extends State<NewNotePage> {
     return Scaffold(
       appBar: AppBar(
         actions: [IconButton(icon: const Icon(Icons.save), onPressed: _save)],
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
       ),
       body: Column(
         children: [
@@ -200,27 +204,36 @@ class _NewNotePageState extends State<NewNotePage> {
       floatingActionButton: SpeedDial(
         icon: Icons.add,
         activeIcon: Icons.close,
-        backgroundColor: Colors.blue,
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
         children: [
           SpeedDialChild(
             child: const Icon(Icons.image),
             label: tr("image"),
             onTap: _addImage,
+            backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+            foregroundColor: Theme.of(context).colorScheme.onSecondaryContainer,
           ),
           SpeedDialChild(
             child: const Icon(Icons.videocam),
             label: tr("video"),
             onTap: _addVideo,
+            backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+            foregroundColor: Theme.of(context).colorScheme.onSecondaryContainer,
           ),
           SpeedDialChild(
             child: const Icon(Icons.mic),
             label: tr("audio"),
             onTap: _addAudio,
+            backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+            foregroundColor: Theme.of(context).colorScheme.onSecondaryContainer,
           ),
           SpeedDialChild(
             child: const Icon(Icons.attach_file),
             label: tr("file"),
             onTap: _addFile,
+            backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+            foregroundColor: Theme.of(context).colorScheme.onSecondaryContainer,
           ),
         ],
       ),
