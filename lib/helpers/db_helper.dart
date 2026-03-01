@@ -21,6 +21,7 @@ class DBHelper {
         '1_create_notes_table.sql',
         '2_create_attachments_table.sql',
         '3_add_is_favorite_to_notes.sql',
+        '4_add_name_to_attachments.sql',
       ],
     );
 
@@ -52,6 +53,7 @@ class DBHelper {
         'note_id': noteId,
         'type': attachment.type.toString().split('.').last,
         'file_path': attachment.filePath,
+        'name': attachment.name,
       });
     }
 
@@ -80,6 +82,7 @@ class DBHelper {
             (t) => t.toString().split('.').last == att['type'],
           ),
           filePath: att['file_path'] as String,
+          name: att['name'] as String,
         );
       }).toList();
 
@@ -124,6 +127,7 @@ class DBHelper {
         'note_id': id,
         'type': attachment.type.toString().split('.').last,
         'file_path': attachment.filePath,
+        'name': attachment.name,
       });
     }
 

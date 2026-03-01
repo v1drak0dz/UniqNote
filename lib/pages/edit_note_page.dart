@@ -56,7 +56,11 @@ class _EditNotePageState extends State<EditNotePage> {
     if (picked != null) {
       setState(() {
         attachments.add(
-          Attachment(type: AttachmentType.image, filePath: picked.path),
+          Attachment(
+            type: AttachmentType.image,
+            filePath: picked.path,
+            name: picked.name,
+          ),
         );
       });
     }
@@ -67,7 +71,11 @@ class _EditNotePageState extends State<EditNotePage> {
     if (picked != null) {
       setState(() {
         attachments.add(
-          Attachment(type: AttachmentType.video, filePath: picked.path),
+          Attachment(
+            type: AttachmentType.video,
+            filePath: picked.path,
+            name: picked.name,
+          ),
         );
       });
     }
@@ -81,6 +89,7 @@ class _EditNotePageState extends State<EditNotePage> {
           Attachment(
             type: AttachmentType.file,
             filePath: result.files.first.path!,
+            name: result.files.first.name,
           ),
         );
       });
@@ -95,6 +104,7 @@ class _EditNotePageState extends State<EditNotePage> {
           Attachment(
             type: AttachmentType.audio,
             filePath: result.files.first.path!,
+            name: result.files.first.name,
           ),
         );
       });
@@ -149,7 +159,9 @@ class _EditNotePageState extends State<EditNotePage> {
                           return Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: ActionChip(
-                              label: Text(tr("audio")),
+                              label: attachment.name != 'file'
+                                  ? Text(attachment.name)
+                                  : Text(tr("audio")),
                               onPressed: () => _openFile(attachment.filePath),
                             ),
                           );
@@ -157,7 +169,9 @@ class _EditNotePageState extends State<EditNotePage> {
                           return Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: ActionChip(
-                              label: Text(tr("file")),
+                              label: attachment.name != 'file'
+                                  ? Text(attachment.name)
+                                  : Text(tr("file")),
                               onPressed: () => _openFile(attachment.filePath),
                             ),
                           );
@@ -165,7 +179,9 @@ class _EditNotePageState extends State<EditNotePage> {
                           return Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: ActionChip(
-                              label: Text(tr("video")),
+                              label: attachment.name != 'file'
+                                  ? Text(attachment.name)
+                                  : Text(tr("video")),
                               onPressed: () => _openFile(attachment.filePath),
                             ),
                           );
