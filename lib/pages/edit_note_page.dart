@@ -9,6 +9,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:uniqnote/helpers/db_helper.dart';
 import 'package:uniqnote/models/attachment.dart';
 import 'package:uniqnote/models/note.dart';
+import 'package:uniqnote/pages/audio_record_page.dart';
 
 class EditNotePage extends StatefulWidget {
   final Note note;
@@ -97,14 +98,18 @@ class _EditNotePageState extends State<EditNotePage> {
   }
 
   Future<void> _addAudio() async {
-    final result = await FilePicker.platform.pickFiles(type: FileType.audio);
-    if (result != null && result.files.isNotEmpty) {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const RecordAudioPage()),
+    );
+
+    if (result != null) {
       setState(() {
         attachments.add(
           Attachment(
             type: AttachmentType.audio,
-            filePath: result.files.first.path!,
-            name: result.files.first.name,
+            filePath: result['path'],
+            name: result['name'],
           ),
         );
       });
