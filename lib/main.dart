@@ -8,6 +8,7 @@ import 'package:uniqnote/pages/new_note_page.dart';
 import 'package:uniqnote/pages/edit_note_page.dart';
 import 'package:uniqnote/models/note.dart';
 import 'package:uniqnote/models/attachment.dart';
+import 'package:uniqnote/services/backup_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -128,14 +129,28 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   List<Note> notes = [];
   String query = "";
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadNotes();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
+    if (state == AppLifecycleState.paused) {
+      await BackupService.autoBackup();
+    }
   }
 
   void _loadNotes() async {

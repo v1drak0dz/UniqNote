@@ -16,7 +16,8 @@ Project Description
 - [ ] Busca de conteudo na nota
 - [ ] Suporte a AMOLED
 - [ ] Cores Dinamicas (MAterial You)
-- [ ] Sistema de Backup de notas
+- [x] Sistema de Backup de notas
+- [ ] Melhorar sistema de backup
 
 ### In Progress
 
