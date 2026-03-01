@@ -5,6 +5,7 @@ import 'package:path/path.dart';
 
 import 'package:uniqnote/models/attachment.dart';
 import 'package:uniqnote/models/note.dart';
+import 'package:uniqnote/models/folder.dart';
 
 class DBHelper {
   static Database? _db;
@@ -22,6 +23,7 @@ class DBHelper {
         '2_create_attachments_table.sql',
         '3_add_is_favorite_to_notes.sql',
         '4_add_name_to_attachments.sql',
+        '5_create_folders_add_to_notes.sql',
       ],
     );
 
@@ -33,6 +35,34 @@ class DBHelper {
     final path = join(dbPath, 'notes.db');
 
     return await openDatabase(path, version: 2);
+  }
+
+  static Future<int> insertFolder(String name) async {
+    final db = await database;
+
+    return await db.insert('folders', {
+      'name': name,
+      'created_at': DateTime.now().toIso8601String(),
+    });
+  }
+
+  static Future<List<Folder>> getFolders() async {
+    final db = await database;
+
+    final result = await db.query('folders');
+
+    return result.map((e) => Folder.fromMap(e)).toList();
+  }
+
+  static Future<void> moveNoteToFolder(int noteId, int? folderId) async {
+    final db = await database;
+
+    await db.update(
+      'notes',
+      {'folder_id': folderId},
+      where: 'id = ?',
+      whereArgs: [noteId],
+    );
   }
 
   static Future<int> insertNote(
@@ -95,6 +125,7 @@ class DBHelper {
           modifiedAt: DateTime.parse(noteMap['modified_at'] as String),
           attachments: attachments,
           isFavorite: noteMap['is_favorite'] as int,
+          folderId: noteMap['folder_id'] as int?,
         ),
       );
     }
