@@ -1,7 +1,7 @@
 name: uniqnote
 description: "A simple note-taking app that born to be minimalist with cool features."
 publish_to: "none"
-version: 1.4.0
+version: 1.5.0
 
 environment:
   sdk: ^3.10.1
@@ -30,6 +30,7 @@ dependencies:
   get_it: ^7.7.0
   easy_localization: ^3.0.8
   shared_preferences: ^2.5.4
+  package_info_plus: ^9.0.0
 
 dev_dependencies:
   flutter_test:

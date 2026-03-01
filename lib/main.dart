@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import 'package:uniqnote/helpers/db_helper.dart';
 import 'package:uniqnote/pages/new_note_page.dart';
@@ -46,6 +47,7 @@ const themeOptions = [
   ThemeOption("color_orange", Colors.orange),
   ThemeOption("color_purple", Colors.purple),
   ThemeOption("color_teal", Colors.teal),
+  ThemeOption("color_pink", Colors.pink),
 ];
 
 //////////////////////////////////////////////////////////////
@@ -132,12 +134,14 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   List<Note> notes = [];
   String query = "";
+  String appVersion = "";
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _loadNotes();
+    _loadVersion();
   }
 
   @override
@@ -253,6 +257,13 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   //////////////////////////////////////////////////////////////
 
+  Future<void> _loadVersion() async {
+    final info = await PackageInfo.fromPlatform();
+    setState(() {
+      appVersion = info.version;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final filteredNotes = notes.where((n) {
@@ -261,13 +272,19 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          tr("notes"),
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.onPrimaryContainer,
-          ),
+        title: Column(
+          children: [
+            Text(
+              tr("notes"),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.onPrimaryContainer,
+              ),
+            ),
+            Text("v$appVersion", style: TextStyle(fontSize: 8.0)),
+          ],
         ),
+
         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
         actions: [
           ////////////////////////////////////////////////////
