@@ -28,7 +28,7 @@ class _NewNotePageState extends State<NewNotePage> {
   @override
   void initState() {
     super.initState();
-    titleController.text = generateTitle();
+    titleController.text = "$generateTitle() - $tr('your_title')";
   }
 
   void _save() async {
