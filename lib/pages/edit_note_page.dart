@@ -151,7 +151,12 @@ class _EditNotePageState extends State<EditNotePage> {
               ),
             ),
           ),
-          const Divider(),
+
+          Divider(
+            indent: 24.0,
+            endIndent: 24.0,
+            radius: BorderRadiusGeometry.circular(12.0),
+          ),
           attachments.isEmpty
               ? const SizedBox.shrink()
               : SizedBox(

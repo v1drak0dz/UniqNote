@@ -31,7 +31,7 @@ class _NewNotePageState extends State<NewNotePage> {
   @override
   void initState() {
     super.initState();
-    titleController.text = "$timestampTitle - $dummyTitle";
+    // titleController.text = "$timestampTitle - $dummyTitle";
   }
 
   void _save() async {
@@ -116,7 +116,13 @@ class _NewNotePageState extends State<NewNotePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        actions: [IconButton(icon: const Icon(Icons.save), onPressed: _save)],
+        actions: [
+          IconButton(icon: const Icon(Icons.save), onPressed: _save),
+          IconButton(
+            icon: const Icon(Icons.auto_awesome),
+            onPressed: () => titleController.text = generateTitle(),
+          ),
+        ],
         backgroundColor: Theme.of(context).brightness == Brightness.dark
             ? Theme.of(context).colorScheme.primaryContainer
             : Theme.of(context).colorScheme.primary,
@@ -139,7 +145,11 @@ class _NewNotePageState extends State<NewNotePage> {
               ),
             ),
           ),
-          const Divider(),
+          Divider(
+            indent: 24.0,
+            endIndent: 24.0,
+            radius: BorderRadiusGeometry.circular(12.0),
+          ),
           attachments.isEmpty
               ? const SizedBox.shrink()
               : SizedBox(

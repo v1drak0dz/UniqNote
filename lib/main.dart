@@ -40,6 +40,7 @@ class ThemeOption {
 }
 
 const themeOptions = [
+  ThemeOption("color_grey", Colors.grey),
   ThemeOption("color_blue", Colors.blue),
   ThemeOption("color_red", Colors.red),
   ThemeOption("color_green", Colors.green),
@@ -296,9 +297,10 @@ class _HomePageState extends State<HomePage> {
                           fontSize: 14,
                         ),
                       ),
-                      // note.isFavorite == 1
-                      //     ? Icon(Icons.favorite, color: Colors.pink)
-                      //     : Text(""),
+                      note.isFavorite ==
+                              1 //&& note.folderId != null
+                          ? Icon(Icons.favorite, color: Colors.pink, size: 16.0)
+                          : Text(""),
                     ],
                   ),
 
@@ -396,8 +398,9 @@ class _HomePageState extends State<HomePage> {
                   ////////////////////////////////////////////////////
                   /// SELECT COLOR
                   ////////////////////////////////////////////////////
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Wrap(
+                    spacing: 4,
+                    runSpacing: 4,
                     children: List.generate(themeOptions.length, (index) {
                       final color = themeOptions[index];
 
@@ -732,7 +735,7 @@ class _HomePageState extends State<HomePage> {
         .toList();
     final favorites = filteredNotes.where((n) => n.isFavorite == 1).toList();
     final noFolder = filteredNotes
-        .where((n) => n.folderId == null && n.isFavorite == 0)
+        .where((n) => n.folderId == null /*&& n.isFavorite == 0*/)
         .toList();
 
     return Scaffold(
@@ -796,25 +799,25 @@ class _HomePageState extends State<HomePage> {
               ////////////////////////////////////////////////////
               /// FAVORITES
               ////////////////////////////////////////////////////
-              if (favorites.isNotEmpty) ...[
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8, top: 8),
-                  child: Row(
-                    children: [
-                      Icon(Icons.favorite, color: Colors.pink),
-                      const SizedBox(width: 6),
-                      Text(
-                        tr("favorites"),
-                        style: Theme.of(context).textTheme.titleMedium!
-                            .copyWith(fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ),
+              // if (favorites.isNotEmpty) ...[
+              //   Padding(
+              //     padding: const EdgeInsets.only(bottom: 8, top: 8),
+              //     child: Row(
+              //       children: [
+              //         Icon(Icons.favorite, color: Colors.pink),
+              //         const SizedBox(width: 6),
+              //         Text(
+              //           tr("favorites"),
+              //           style: Theme.of(context).textTheme.titleMedium!
+              //               .copyWith(fontWeight: FontWeight.bold),
+              //         ),
+              //       ],
+              //     ),
+              //   ),
 
-                _notesGrid(favorites),
-                const SizedBox(height: 16),
-              ],
+              //   _notesGrid(favorites),
+              //   const SizedBox(height: 16),
+              // ],
 
               ////////////////////////////////////////////////////
               /// FOLDERS
