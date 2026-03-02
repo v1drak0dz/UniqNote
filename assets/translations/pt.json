@@ -1,5 +1,6 @@
 {
     "notes": "Notas",
+    "note": "Nota",
     "delete": "Deletar",
     "favorite": "Favoritar",
     "image": "Imagem",
@@ -34,5 +35,7 @@
     "rename": "Renomear",
     "rename_folder": "Renomear pasta",
     "folder_name": "Nome da pasta",
-    "save": "Salvar"
+    "save": "Salvar",
+    "folder_color": "Cor da pasta",
+    "change_color": "Mudar cor"
 }

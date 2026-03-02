@@ -4,4 +4,4 @@ CREATE TABLE IF NOT EXISTS folders (
   created_at TEXT
 );
 
-ALTER TABLE notes ADD COLUMN folder_id INTEGER;
+--ALTER TABLE notes ADD COLUMN folder_id INTEGER;

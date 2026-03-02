@@ -373,28 +373,87 @@ class _HomePageState extends State<HomePage> {
 
   void _createFolderModal() {
     final controller = TextEditingController();
+    int selectedColor = 0;
 
     showDialog(
       context: context,
       builder: (_) {
-        return AlertDialog(
-          title: Text(tr("new_folder")),
-          content: TextField(controller: controller, autofocus: true),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(tr("cancel")),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                await DBHelper.insertFolder(controller.text);
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return AlertDialog(
+              title: Text(tr("new_folder")),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: controller,
+                    autofocus: true,
+                    decoration: InputDecoration(hintText: tr("folder_name")),
+                  ),
 
-                Navigator.pop(context);
-                _loadFolders();
-              },
-              child: Text(tr("create")),
-            ),
-          ],
+                  const SizedBox(height: 16),
+
+                  ////////////////////////////////////////////////////
+                  /// SELECT COLOR
+                  ////////////////////////////////////////////////////
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: List.generate(themeOptions.length, (index) {
+                      final color = themeOptions[index];
+
+                      final isSelected = selectedColor == index;
+
+                      return GestureDetector(
+                        onTap: () {
+                          setModalState(() {
+                            selectedColor = index;
+                          });
+                        },
+                        child: Container(
+                          width: 34,
+                          height: 34,
+                          decoration: BoxDecoration(
+                            color: color.color,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: isSelected
+                                  ? Theme.of(context).colorScheme.onSurface
+                                  : Colors.transparent,
+                              width: 2,
+                            ),
+                          ),
+                          child: isSelected
+                              ? const Icon(
+                                  Icons.check,
+                                  size: 18,
+                                  color: Colors.white,
+                                )
+                              : null,
+                        ),
+                      );
+                    }),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(tr("cancel")),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (controller.text.trim().isEmpty) return;
+
+                    await DBHelper.insertFolder(controller.text, selectedColor);
+
+                    Navigator.pop(context);
+                    _loadFolders();
+                  },
+                  child: Text(tr("create")),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -577,6 +636,91 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Future<int?> openFolderColorSelector(
+    BuildContext context,
+    int initialIndex,
+    int folderId,
+  ) async {
+    int selectedIndex = initialIndex;
+
+    return showModalBottomSheet<int>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      tr("folder_color"),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    ////////////////////////////////////////////////////
+                    /// LISTA DE CORES
+                    ////////////////////////////////////////////////////
+                    ...List.generate(themeOptions.length, (index) {
+                      final option = themeOptions[index];
+
+                      return RadioListTile<int>(
+                        value: index,
+                        groupValue: selectedIndex,
+                        onChanged: (value) {
+                          if (value == null) return;
+
+                          setModalState(() {
+                            selectedIndex = value;
+                          });
+                        },
+                        title: Row(
+                          children: [
+                            Container(
+                              width: 22,
+                              height: 22,
+                              decoration: BoxDecoration(
+                                color: option.color,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Text(tr(option.translationKey)),
+                          ],
+                        ),
+                      );
+                    }),
+
+                    const SizedBox(height: 8),
+
+                    ElevatedButton(
+                      onPressed: () async {
+                        await DBHelper.changeColorFolder(
+                          folderId,
+                          selectedIndex,
+                        );
+                        Navigator.pop(context, selectedIndex);
+                        _loadAll();
+                      },
+                      child: const Text("Aplicar"),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   ////////////////////////////////////////////////////////////
   /// BUILD
   ////////////////////////////////////////////////////////////
@@ -705,6 +849,10 @@ class _HomePageState extends State<HomePage> {
                     final notesInFolder = notes
                         .where((x) => x.folderId == folder.id)
                         .length;
+                    final description = notesInFolder == 1
+                        ? tr("note")
+                        : tr("notes");
+
                     return GestureDetector(
                       onTap: () => _openFolder(folder),
                       onLongPress: () {
@@ -741,6 +889,18 @@ class _HomePageState extends State<HomePage> {
                                       _renameFolderModal(folder);
                                     },
                                   ),
+                                  ListTile(
+                                    leading: Icon(Icons.pallet),
+                                    title: Text(tr("change_color")),
+                                    onTap: () {
+                                      Navigator.pop(folderModalContext);
+                                      openFolderColorSelector(
+                                        folderModalContext,
+                                        folder.color,
+                                        folder.id!,
+                                      );
+                                    },
+                                  ),
                                 ],
                               ),
                             );
@@ -752,6 +912,7 @@ class _HomePageState extends State<HomePage> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14.0),
                         ),
+                        surfaceTintColor: themeOptions[folder.color].color,
                         child: Padding(
                           padding: const EdgeInsets.all(10.0),
                           child: Column(
@@ -760,11 +921,15 @@ class _HomePageState extends State<HomePage> {
                             children: [
                               Row(
                                 children: [
-                                  // Icon(Icons.folder, size: 24),
-                                  // const SizedBox(width: 4),
+                                  Icon(
+                                    Icons.folder,
+                                    size: 16,
+                                    color: themeOptions[folder.color].color,
+                                  ),
+                                  const SizedBox(width: 4),
                                   Text(
                                     folder.name,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 16,
                                     ),
@@ -775,10 +940,8 @@ class _HomePageState extends State<HomePage> {
                               const SizedBox(height: 6.0),
                               Row(
                                 children: [
-                                  Icon(Icons.description, size: 16),
-                                  const SizedBox(width: 4.0),
                                   Text(
-                                    "$notesInFolder",
+                                    "$notesInFolder $description",
                                     style: TextStyle(fontSize: 16),
                                   ),
                                 ],

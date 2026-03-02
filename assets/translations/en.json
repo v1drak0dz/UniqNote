@@ -1,5 +1,6 @@
 {
     "notes": "Notes",
+    "note": "Note",
     "delete": "Delete",
     "favorite": "Favorite",
     "image": "Image",
@@ -34,5 +35,7 @@
     "rename": "Rename",
     "rename_folder": "Rename folder",
     "folder_name": "Folder name",
-    "save": "Save"
+    "save": "Save",
+    "folder_color": "Folder color",
+    "change_color": "Change color"
 }

@@ -24,6 +24,7 @@ class DBHelper {
         '3_add_is_favorite_to_notes.sql',
         '4_add_name_to_attachments.sql',
         '5_create_folders_add_to_notes.sql',
+        '6_add_color_to_folders.sql',
       ],
     );
 
@@ -37,11 +38,12 @@ class DBHelper {
     return await openDatabase(path, version: 2);
   }
 
-  static Future<int> insertFolder(String name) async {
+  static Future<int> insertFolder(String name, int color) async {
     final db = await database;
 
     return await db.insert('folders', {
       'name': name,
+      'color': color,
       'created_at': DateTime.now().toIso8601String(),
     });
   }
@@ -176,8 +178,26 @@ class DBHelper {
     );
   }
 
+  static Future<int> changeColorFolder(int folderId, int newColor) async {
+    final db = await database;
+
+    return await db.update(
+      'folders',
+      {'color': newColor},
+      where: 'id = ?',
+      whereArgs: [folderId],
+    );
+  }
+
   static Future<int> deleteFolder(int folderId) async {
     final db = await database;
+
+    await db.update(
+      'notes',
+      {'folder_id': 'NULL'},
+      where: 'folder_id = ?',
+      whereArgs: [folderId],
+    );
 
     return await db.delete('folders', where: 'id = ?', whereArgs: [folderId]);
   }

@@ -1,0 +1,3 @@
+ALTER TABLE `folders` ADD COLUMN `color` INTEGER DEFAULT 0;
+
+
