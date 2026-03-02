@@ -893,7 +893,7 @@ class _HomePageState extends State<HomePage> {
                                     },
                                   ),
                                   ListTile(
-                                    leading: Icon(Icons.pallet),
+                                    leading: Icon(Icons.palette),
                                     title: Text(tr("change_color")),
                                     onTap: () {
                                       Navigator.pop(folderModalContext);

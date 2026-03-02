@@ -127,7 +127,9 @@ class DBHelper {
           modifiedAt: DateTime.parse(noteMap['modified_at'] as String),
           attachments: attachments,
           isFavorite: noteMap['is_favorite'] as int,
-          folderId: noteMap['folder_id'] as int?,
+          folderId: noteMap['folder_id'] != null
+              ? int.tryParse(noteMap['folder_id'].toString())
+              : null,
         ),
       );
     }
