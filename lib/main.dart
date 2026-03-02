@@ -44,10 +44,12 @@ const themeOptions = [
   ThemeOption("color_red", Colors.red),
   ThemeOption("color_green", Colors.green),
   ThemeOption("color_orange", Colors.orange),
-  ThemeOption("color_purple", Colors.purple),
+  ThemeOption("color_purple", Color(0xFFBD93F9)),
   ThemeOption("color_teal", Colors.teal),
-  ThemeOption("color_pink", Colors.pink),
+  ThemeOption("color_pink", Color.fromARGB(255, 255, 0, 255)),
 ];
+
+const contrastLevel = 0.0;
 
 //////////////////////////////////////////////////////////////
 // APP ROOT
@@ -65,6 +67,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   int themeIndex = 0;
+  bool isDarkMode = false;
 
   Color get seedColor => themeOptions[themeIndex].color;
 
@@ -77,6 +80,13 @@ class _MyAppState extends State<MyApp> {
   Future<void> _loadTheme() async {
     final prefs = await SharedPreferences.getInstance();
     final index = prefs.getInt('theme_index');
+    final mode = prefs.getBool('theme_mode');
+
+    if (mode != null) {
+      setState(() {
+        isDarkMode = mode;
+      });
+    }
 
     if (index != null && index < themeOptions.length) {
       setState(() {
@@ -95,6 +105,15 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
+  Future<void> changeThemeMode(bool mode) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('theme_mode', mode);
+
+    setState(() {
+      isDarkMode = mode;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -106,6 +125,7 @@ class _MyAppState extends State<MyApp> {
         colorScheme: ColorScheme.fromSeed(
           seedColor: seedColor,
           brightness: Brightness.light,
+          contrastLevel: contrastLevel,
         ),
         useMaterial3: true,
       ),
@@ -113,10 +133,11 @@ class _MyAppState extends State<MyApp> {
         colorScheme: ColorScheme.fromSeed(
           seedColor: seedColor,
           brightness: Brightness.dark,
+          contrastLevel: contrastLevel,
         ),
         useMaterial3: true,
       ),
-      themeMode: ThemeMode.system,
+      themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
     );
   }
 }
@@ -220,7 +241,7 @@ class _HomePageState extends State<HomePage> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       ListTile(
-                        leading: const Icon(Icons.favorite),
+                        leading: const Icon(Icons.favorite, color: Colors.pink),
                         title: Text(tr("favorite")),
                         onTap: () async {
                           await DBHelper.favoriteNode(note.id);
@@ -231,7 +252,7 @@ class _HomePageState extends State<HomePage> {
                         },
                       ),
                       ListTile(
-                        leading: const Icon(Icons.delete),
+                        leading: const Icon(Icons.delete, color: Colors.red),
                         title: Text(tr("delete")),
                         onTap: () async {
                           await DBHelper.deleteNote(note.id);
@@ -241,7 +262,7 @@ class _HomePageState extends State<HomePage> {
                         },
                       ),
                       ListTile(
-                        leading: const Icon(Icons.folder),
+                        leading: const Icon(Icons.folder, color: Colors.amber),
                         title: Text(tr("move_to_folder")),
                         onTap: () async {
                           Navigator.pop(modalContext);
@@ -257,7 +278,7 @@ class _HomePageState extends State<HomePage> {
           child: Card(
             elevation: 2,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(14),
             ),
             child: Padding(
               padding: const EdgeInsets.all(10.0),
@@ -275,7 +296,9 @@ class _HomePageState extends State<HomePage> {
                           fontSize: 14,
                         ),
                       ),
-                      note.isFavorite == 1 ? Icon(Icons.favorite) : Text(""),
+                      // note.isFavorite == 1
+                      //     ? Icon(Icons.favorite, color: Colors.pink)
+                      //     : Text(""),
                     ],
                   ),
 
@@ -355,12 +378,12 @@ class _HomePageState extends State<HomePage> {
       context: context,
       builder: (_) {
         return AlertDialog(
-          title: const Text("Nova pasta"),
+          title: Text(tr("new_folder")),
           content: TextField(controller: controller, autofocus: true),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("Cancelar"),
+              child: Text(tr("cancel")),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -369,7 +392,7 @@ class _HomePageState extends State<HomePage> {
                 Navigator.pop(context);
                 _loadFolders();
               },
-              child: const Text("Criar"),
+              child: Text(tr("create")),
             ),
           ],
         );
@@ -384,13 +407,14 @@ class _HomePageState extends State<HomePage> {
 
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       builder: (modalContext) {
         return SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                title: const Text("Sem pasta"),
+                title: Text(tr("no_folder")),
                 leading: const Icon(Icons.folder_off),
                 onTap: () async {
                   await DBHelper.moveNoteToFolder(note.id, null);
@@ -421,9 +445,11 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _openThemeSelector() async {
     int selectedIndex = MyApp.of(context).themeIndex;
+    bool selectedMode = MyApp.of(context).isDarkMode;
 
     await showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
@@ -455,6 +481,7 @@ class _HomePageState extends State<HomePage> {
                         onChanged: (value) {
                           if (value == null) return;
 
+                          MyApp.of(context).changeThemeIndex(value);
                           setModalState(() {
                             selectedIndex = value;
                           });
@@ -478,8 +505,22 @@ class _HomePageState extends State<HomePage> {
 
                     const SizedBox(height: 8),
 
+                    SwitchListTile(
+                      title: Text(tr("dark_mode")),
+                      value: selectedMode,
+                      onChanged: (value) {
+                        MyApp.of(context).changeThemeMode(value);
+                        setModalState(() {
+                          selectedMode = value;
+                        });
+                      },
+                    ),
+
+                    const SizedBox(height: 8.0),
+
                     ElevatedButton(
                       onPressed: () {
+                        MyApp.of(context).changeThemeMode(selectedMode);
                         MyApp.of(context).changeThemeIndex(selectedIndex);
                         Navigator.pop(context);
                       },
@@ -505,18 +546,25 @@ class _HomePageState extends State<HomePage> {
         .where((n) => n.title.toLowerCase().contains(query.toLowerCase()))
         .toList();
     final favorites = filteredNotes.where((n) => n.isFavorite == 1).toList();
-    final noFolder = filteredNotes.where((n) => n.folderId == null).toList();
+    final noFolder = filteredNotes
+        .where((n) => n.folderId == null && n.isFavorite == 0)
+        .toList();
 
     return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
       appBar: AppBar(
         title: Text(
           tr("notes"),
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.onPrimaryContainer,
+            color: MyApp.of(context).isDarkMode
+                ? Theme.of(context).colorScheme.onPrimaryContainer
+                : Theme.of(context).colorScheme.onPrimary,
           ),
         ),
-        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        backgroundColor: MyApp.of(context).isDarkMode
+            ? Theme.of(context).colorScheme.primaryContainer
+            : Theme.of(context).colorScheme.primary,
         actions: [
           ////////////////////////////////////////////////////
           /// BOTÃO TEMA
@@ -524,7 +572,9 @@ class _HomePageState extends State<HomePage> {
           IconButton(
             icon: Icon(
               Icons.palette,
-              color: Theme.of(context).colorScheme.onPrimaryContainer,
+              color: MyApp.of(context).isDarkMode
+                  ? Theme.of(context).colorScheme.onPrimaryContainer
+                  : Theme.of(context).colorScheme.onPrimary,
             ),
             onPressed: _openThemeSelector,
           ),
@@ -535,7 +585,9 @@ class _HomePageState extends State<HomePage> {
           IconButton(
             icon: Icon(
               Icons.search,
-              color: Theme.of(context).colorScheme.onPrimaryContainer,
+              color: MyApp.of(context).isDarkMode
+                  ? Theme.of(context).colorScheme.onPrimaryContainer
+                  : Theme.of(context).colorScheme.onPrimary,
             ),
             onPressed: () async {
               await showSearch(
@@ -560,10 +612,21 @@ class _HomePageState extends State<HomePage> {
               /// FAVORITES
               ////////////////////////////////////////////////////
               if (favorites.isNotEmpty) ...[
-                const Text(
-                  "Favoritas",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8, top: 8),
+                  child: Row(
+                    children: [
+                      Icon(Icons.favorite, color: Colors.pink),
+                      const SizedBox(width: 6),
+                      Text(
+                        tr("favorites"),
+                        style: Theme.of(context).textTheme.titleMedium!
+                            .copyWith(fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
                 ),
+
                 _notesGrid(favorites),
                 const SizedBox(height: 16),
               ],
@@ -572,21 +635,79 @@ class _HomePageState extends State<HomePage> {
               /// FOLDERS
               ////////////////////////////////////////////////////
               if (folders.isNotEmpty) ...[
-                const Text(
-                  "Pastas",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-
                 const SizedBox(height: 8),
 
-                Wrap(
-                  spacing: 8,
-                  children: folders.map((folder) {
-                    return ActionChip(
-                      label: Text(folder.name),
-                      onPressed: () => _openFolder(folder),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8, top: 8),
+                  child: Row(
+                    children: [
+                      Icon(Icons.folder, color: Colors.amber),
+                      const SizedBox(width: 6),
+                      Text(
+                        tr("folders"),
+                        style: Theme.of(context).textTheme.titleMedium!
+                            .copyWith(fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ),
+
+                MasonryGridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 8,
+                  crossAxisSpacing: 8,
+                  itemCount: folders.length,
+                  itemBuilder: (_, i) {
+                    final folder = folders[i];
+                    final notesInFolder = notes
+                        .where((x) => x.folderId == folder.id)
+                        .length;
+                    return GestureDetector(
+                      onTap: () => _openFolder(folder),
+                      child: Card(
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14.0),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(10.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Row(
+                                children: [
+                                  // Icon(Icons.folder, size: 24),
+                                  // const SizedBox(width: 4),
+                                  Text(
+                                    folder.name,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 6.0),
+                              Row(
+                                children: [
+                                  Icon(Icons.description, size: 16),
+                                  const SizedBox(width: 4.0),
+                                  Text(
+                                    "$notesInFolder",
+                                    style: TextStyle(fontSize: 16),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     );
-                  }).toList(),
+                  },
                 ),
 
                 const SizedBox(height: 16),
@@ -596,10 +717,26 @@ class _HomePageState extends State<HomePage> {
               /// NO FOLDER
               ////////////////////////////////////////////////////
               if (noFolder.isNotEmpty) ...[
-                const Text(
-                  "Sem pasta",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                const SizedBox(height: 8),
+
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8, top: 8),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.description,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        tr("notes"),
+                        style: Theme.of(context).textTheme.titleMedium!
+                            .copyWith(fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
                 ),
+
                 _notesGrid(noFolder),
               ],
             ],
@@ -617,6 +754,12 @@ class _HomePageState extends State<HomePage> {
             heroTag: "folder",
             mini: true,
             onPressed: _createFolderModal,
+            backgroundColor: MyApp.of(context).isDarkMode
+                ? Theme.of(context).colorScheme.primaryContainer
+                : Theme.of(context).colorScheme.primary,
+            foregroundColor: MyApp.of(context).isDarkMode
+                ? Theme.of(context).colorScheme.onPrimaryContainer
+                : Theme.of(context).colorScheme.onPrimary,
             child: const Icon(Icons.folder),
           ),
 
@@ -624,6 +767,12 @@ class _HomePageState extends State<HomePage> {
 
           FloatingActionButton(
             heroTag: "note",
+            backgroundColor: MyApp.of(context).isDarkMode
+                ? Theme.of(context).colorScheme.primaryContainer
+                : Theme.of(context).colorScheme.primary,
+            foregroundColor: MyApp.of(context).isDarkMode
+                ? Theme.of(context).colorScheme.onPrimaryContainer
+                : Theme.of(context).colorScheme.onPrimary,
             onPressed: () async {
               await Navigator.push(
                 context,

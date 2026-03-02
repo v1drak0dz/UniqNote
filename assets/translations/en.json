@@ -19,5 +19,14 @@
     "color_pink": "Pink",
 
     "your_title": "Your title here",
-    "move_to_folder": "Move to folder"
+    "move_to_folder": "Move to folder",
+    "dark_mode": "Dark mode",
+
+    "new_folder": "New folder",
+    "cancel": "Cancel",
+    "create": "Create",
+
+    "no_folder": "No folder",
+    "favorites": "Favorites",
+    "folders": "Folders"
 }

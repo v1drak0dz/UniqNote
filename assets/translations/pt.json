@@ -19,5 +19,14 @@
     "color_pink": "Rosa",
 
     "your_title": "Seu titulo aqui",
-    "move_to_folder": "Mover para pasta"
+    "move_to_folder": "Mover para pasta",
+    "dark_mode": "Modo escuro",
+
+    "new_folder": "Nova pasta",
+    "cancel": "Cancelar",
+    "create": "Criar",
+
+    "no_folder": "Sem pasta",
+    "favorites": "Favoritas",
+    "folders": "Pastas"
 }
