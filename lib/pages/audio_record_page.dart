@@ -7,6 +7,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class RecordAudioPage extends StatefulWidget {
   const RecordAudioPage({super.key});
@@ -172,6 +173,12 @@ class _RecordAudioPageState extends State<RecordAudioPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Gravar áudio"),
+        backgroundColor: Theme.of(context).brightness == Brightness.dark
+            ? Theme.of(context).colorScheme.primaryContainer
+            : Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).brightness == Brightness.dark
+            ? Theme.of(context).colorScheme.onPrimaryContainer
+            : Theme.of(context).colorScheme.onPrimary,
         actions: [
           if (hasRecording)
             IconButton(icon: const Icon(Icons.save), onPressed: saveRecording),
@@ -184,8 +191,8 @@ class _RecordAudioPageState extends State<RecordAudioPage> {
             /// Nome do arquivo
             TextField(
               controller: nameController,
-              decoration: const InputDecoration(
-                labelText: "Nome do áudio",
+              decoration: InputDecoration(
+                labelText: tr("audio_name"),
                 border: OutlineInputBorder(),
               ),
             ),
@@ -229,7 +236,9 @@ class _RecordAudioPageState extends State<RecordAudioPage> {
                   iconSize: 70,
                   icon: Icon(
                     isRecording ? Icons.stop_circle : Icons.mic,
-                    color: isRecording ? Colors.red : null,
+                    color: isRecording
+                        ? Colors.red
+                        : Theme.of(context).colorScheme.primary,
                   ),
                   onPressed: isRecording ? stopRecording : startRecording,
                 ),
