@@ -6,7 +6,7 @@ Project Description
 
 ### Todo
 
-- [ ] folders
+- [x] folders
 - [ ] private notes
 - [ ] visualizacao detalhada com preview completo dos anexos
 - [ ] exportar/compartilhar notas em pdf ou texto

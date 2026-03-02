@@ -165,6 +165,23 @@ class DBHelper {
     return result;
   }
 
+  static Future<int> renameFolder(int folderId, String newName) async {
+    final db = await database;
+
+    return await db.update(
+      'folders',
+      {'name': newName},
+      where: 'id = ?',
+      whereArgs: [folderId],
+    );
+  }
+
+  static Future<int> deleteFolder(int folderId) async {
+    final db = await database;
+
+    return await db.delete('folders', where: 'id = ?', whereArgs: [folderId]);
+  }
+
   static Future<int> deleteNote(int id) async {
     final db = await database;
     await db.delete('attachments', where: 'note_id = ?', whereArgs: [id]);

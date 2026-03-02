@@ -29,5 +29,10 @@
     "no_folder": "Sem pasta",
     "favorites": "Favoritas",
     "folders": "Pastas",
-    "audio_name": "Nome do áudio"
+    "audio_name": "Nome do áudio",
+
+    "rename": "Renomear",
+    "rename_folder": "Renomear pasta",
+    "folder_name": "Nome da pasta",
+    "save": "Salvar"
 }

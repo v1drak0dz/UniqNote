@@ -536,6 +536,47 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void _renameFolderModal(Folder folder) {
+    final controller = TextEditingController(text: folder.name);
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(tr("rename_folder")),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            decoration: InputDecoration(hintText: tr("folder_name")),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                _loadAll();
+              },
+              child: Text(tr("cancel")),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final newName = controller.text.trim();
+
+                if (newName.isEmpty) return;
+
+                await DBHelper.renameFolder(folder.id!, newName);
+
+                Navigator.pop(dialogContext);
+
+                _loadAll();
+              },
+              child: Text(tr("rename")),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   ////////////////////////////////////////////////////////////
   /// BUILD
   ////////////////////////////////////////////////////////////
@@ -666,6 +707,46 @@ class _HomePageState extends State<HomePage> {
                         .length;
                     return GestureDetector(
                       onTap: () => _openFolder(folder),
+                      onLongPress: () {
+                        showModalBottomSheet(
+                          context: context,
+                          builder: (folderModalContext) {
+                            return SafeArea(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  ListTile(
+                                    leading: Icon(
+                                      Icons.delete,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.error,
+                                    ),
+                                    title: Text(tr("delete")),
+                                    onTap: () async {
+                                      await DBHelper.deleteFolder(folder.id!);
+
+                                      Navigator.pop(folderModalContext);
+                                      _loadAll();
+                                    },
+                                  ),
+                                  ListTile(
+                                    leading: Icon(
+                                      Icons.drive_file_rename_outline,
+                                      color: Colors.amber,
+                                    ),
+                                    title: Text(tr("rename")),
+                                    onTap: () {
+                                      Navigator.pop(folderModalContext);
+                                      _renameFolderModal(folder);
+                                    },
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        );
+                      },
                       child: Card(
                         elevation: 2,
                         shape: RoundedRectangleBorder(
