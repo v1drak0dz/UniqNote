@@ -1,25 +1,23 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:audio_waveforms/audio_waveforms.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:record/record.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:audio_waveforms/audio_waveforms.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:easy_localization/easy_localization.dart';
+import 'package:record/record.dart';
 
-class RecordAudioPage extends StatefulWidget {
-  const RecordAudioPage({super.key});
+class RecordAudioSheet extends StatefulWidget {
+  const RecordAudioSheet({super.key});
 
   @override
-  State<RecordAudioPage> createState() => _RecordAudioPageState();
+  State<RecordAudioSheet> createState() => _RecordAudioSheetState();
 }
 
-class _RecordAudioPageState extends State<RecordAudioPage> {
+class _RecordAudioSheetState extends State<RecordAudioSheet> {
   final recorder = AudioRecorder();
   final player = AudioPlayer();
-
   late final RecorderController waveController;
 
   bool isRecording = false;
@@ -27,7 +25,6 @@ class _RecordAudioPageState extends State<RecordAudioPage> {
   bool isPlaying = false;
 
   String? filePath;
-
   int seconds = 0;
   Timer? timer;
 
@@ -38,22 +35,7 @@ class _RecordAudioPageState extends State<RecordAudioPage> {
   @override
   void initState() {
     super.initState();
-
     waveController = RecorderController();
-  }
-
-  Future<bool> requestMicPermission() async {
-    final status = await Permission.microphone.request();
-
-    if (status.isGranted) {
-      return true;
-    }
-
-    if (status.isPermanentlyDenied) {
-      openAppSettings();
-    }
-
-    return false;
   }
 
   Future<String> _generatePath() async {
@@ -81,34 +63,30 @@ class _RecordAudioPageState extends State<RecordAudioPage> {
   Future<void> startRecording() async {
     if (await recorder.hasPermission()) {
       filePath = await _generatePath();
-
       await recorder.start(
         const RecordConfig(
           encoder: AudioEncoder.aacLc,
           bitRate: 128000,
-          sampleRate: 444100,
+          sampleRate: 44100,
         ),
         path: filePath!,
       );
-
       waveController.record();
-
       setState(() {
         isRecording = true;
         seconds = 0;
       });
-
       startTimer();
     }
   }
 
   Future<void> stopRecording() async {
-    await recorder.stop();
+    final path = await recorder.stop(); // retorna o caminho do arquivo final
     await waveController.stop();
-
     stopTimer();
 
     setState(() {
+      filePath = path; // atualiza com o path real
       isRecording = false;
       hasRecording = true;
     });
@@ -117,27 +95,19 @@ class _RecordAudioPageState extends State<RecordAudioPage> {
   Future<void> cancelRecording() async {
     await recorder.stop();
     await waveController.stop();
-
     stopTimer();
-
     if (filePath != null) {
       final file = File(filePath!);
-      if (await file.exists()) {
-        await file.delete();
-      }
+      if (await file.exists()) await file.delete();
     }
-
     Navigator.pop(context);
   }
 
   Future<void> playAudio() async {
     if (filePath == null) return;
-
     await player.setFilePath(filePath!);
     await player.play();
-
     setState(() => isPlaying = true);
-
     player.playerStateStream.listen((state) {
       if (state.processingState == ProcessingState.completed) {
         setState(() => isPlaying = false);
@@ -152,7 +122,7 @@ class _RecordAudioPageState extends State<RecordAudioPage> {
 
   void saveRecording() {
     Navigator.pop(context, {
-      "path": filePath,
+      "path": filePath!,
       "name": nameController.text.isEmpty
           ? "audio"
           : nameController.text.trim(),
@@ -170,68 +140,41 @@ class _RecordAudioPageState extends State<RecordAudioPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Gravar áudio"),
-        backgroundColor: Theme.of(context).brightness == Brightness.dark
-            ? Theme.of(context).colorScheme.primaryContainer
-            : Theme.of(context).colorScheme.primary,
-        foregroundColor: Theme.of(context).brightness == Brightness.dark
-            ? Theme.of(context).colorScheme.onPrimaryContainer
-            : Theme.of(context).colorScheme.onPrimary,
-        actions: [
-          if (hasRecording)
-            IconButton(icon: const Icon(Icons.save), onPressed: saveRecording),
-        ],
-      ),
-      body: Padding(
+    return SafeArea(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            /// Nome do arquivo
             TextField(
               controller: nameController,
               decoration: InputDecoration(
                 labelText: tr("audio_name"),
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
               ),
             ),
-
             const SizedBox(height: 20),
-
-            /// Tempo
             Text(
               formatTime(),
               style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
             ),
-
             const SizedBox(height: 20),
-
-            /// Waveform
             if (isRecording || hasRecording)
               AudioWaveforms(
                 enableGesture: false,
-                size: const Size(double.infinity, 100),
+                size: Size(MediaQuery.of(context).size.width, 100),
                 recorderController: waveController,
                 waveStyle: const WaveStyle(showMiddleLine: false),
               ),
-
             const SizedBox(height: 30),
-
-            /// Botões
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                /// CANCELAR
                 IconButton(
                   iconSize: 40,
                   icon: const Icon(Icons.close),
                   onPressed: cancelRecording,
                 ),
-
                 const SizedBox(width: 20),
-
-                /// GRAVAR / PARAR
                 IconButton(
                   iconSize: 70,
                   icon: Icon(
@@ -242,10 +185,7 @@ class _RecordAudioPageState extends State<RecordAudioPage> {
                   ),
                   onPressed: isRecording ? stopRecording : startRecording,
                 ),
-
                 const SizedBox(width: 20),
-
-                /// PLAY
                 if (hasRecording)
                   IconButton(
                     iconSize: 40,
@@ -254,6 +194,15 @@ class _RecordAudioPageState extends State<RecordAudioPage> {
                   ),
               ],
             ),
+            if (hasRecording)
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.save),
+                  label: const Text("Salvar"),
+                  onPressed: saveRecording,
+                ),
+              ),
           ],
         ),
       ),

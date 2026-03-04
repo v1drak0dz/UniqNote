@@ -7,6 +7,7 @@
     "video": "Video",
     "file": "Arquivo",
     "audio": "Audio",
+    "folder": "Pasta",
 
     "theme": "Tema",
     "apply": "Aplicar",
@@ -38,5 +39,9 @@
     "folder_name": "Nome da pasta",
     "save": "Salvar",
     "folder_color": "Cor da pasta",
-    "change_color": "Mudar cor"
+    "change_color": "Mudar cor",
+
+    "title": "Titulo",
+    "write_your_note": "Escreva sua nota...",
+    "unfavorite": "Desfavoritar"
 }

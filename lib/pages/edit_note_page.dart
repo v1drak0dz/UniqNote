@@ -1,30 +1,37 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter_speed_dial/flutter_speed_dial.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:file_picker/file_picker.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:uniqnote/components/attachments_fab.dart';
+import 'package:uniqnote/cross_cutting/theme_handler.dart';
 
-import 'package:uniqnote/helpers/db_helper.dart';
 import 'package:uniqnote/models/attachment.dart';
 import 'package:uniqnote/models/note.dart';
 import 'package:uniqnote/pages/audio_record_page.dart';
+import 'package:uniqnote/repositories/attachments_repository.dart';
+import 'package:uniqnote/repositories/notes_repository.dart';
+import 'package:uniqnote/strategies/attachmentStrategy/attachment_context.dart';
+import 'package:uniqnote/use_cases/attachments/delete_attachments_use_case.dart';
+import 'package:uniqnote/use_cases/attachments/update_attachments_use_case.dart';
+import 'package:uniqnote/use_cases/notes/delete_note_use_case.dart';
+import 'package:uniqnote/use_cases/notes/update_note_use_case.dart';
 
 class EditNotePage extends StatefulWidget {
   final Note note;
 
-  const EditNotePage({required this.note});
+  const EditNotePage({super.key, required this.note});
 
   @override
-  _EditNotePageState createState() => _EditNotePageState();
+  State<EditNotePage> createState() => _EditNotePageState();
 }
 
 class _EditNotePageState extends State<EditNotePage> {
   late TextEditingController titleController;
   late TextEditingController contentController;
+  final AudioPlayer player = AudioPlayer();
+  bool isPlaying = false;
 
-  // Lista de anexos da nota
   late List<Attachment> attachments;
 
   @override
@@ -33,6 +40,12 @@ class _EditNotePageState extends State<EditNotePage> {
     titleController = TextEditingController(text: widget.note.title);
     contentController = TextEditingController(text: widget.note.content);
     attachments = List<Attachment>.from(widget.note.attachments);
+
+    player.playerStateStream.listen((state) {
+      if (state.processingState == ProcessingState.completed) {
+        setState(() => isPlaying = false);
+      }
+    });
   }
 
   void _save() async {
@@ -40,67 +53,43 @@ class _EditNotePageState extends State<EditNotePage> {
     final title = titleController.text.trim();
     final content = contentController.text;
 
-    await DBHelper.updateNote(id, title, content, attachments);
-
     Navigator.pop(context, true);
+
+    await UpdateNoteUseCase(NotesRepository()).updateNote(id, title, content);
+
+    await UpdateAttachmentsUseCase(
+      AttachmentsRepository(),
+    ).updateAttachments(id, attachments);
   }
 
   void _delete() async {
     final id = widget.note.id;
-    await DBHelper.deleteNote(id);
+
+    final deleteAttachment = DeleteAttachmentsUseCase(AttachmentsRepository());
+    final deleteNoteUseCase = DeleteNoteUseCase(NotesRepository());
+
+    deleteAttachment.deleteAttachmentsFromNote(id);
+    deleteNoteUseCase.deleteNote(id);
+
     Navigator.pop(context, true);
   }
 
-  // Métodos para adicionar anexos
-  Future<void> _addImage() async {
-    final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (picked != null) {
-      setState(() {
-        attachments.add(
-          Attachment(
-            type: AttachmentType.image,
-            filePath: picked.path,
-            name: picked.name,
-          ),
-        );
-      });
-    }
-  }
+  Future<void> _addAttach(AttachmentType attachType) async {
+    final attachmentService = AttachmentContext(attachType);
+    final attach = await attachmentService.addAttachment();
 
-  Future<void> _addVideo() async {
-    final picked = await ImagePicker().pickVideo(source: ImageSource.gallery);
-    if (picked != null) {
+    if (attach != null) {
       setState(() {
-        attachments.add(
-          Attachment(
-            type: AttachmentType.video,
-            filePath: picked.path,
-            name: picked.name,
-          ),
-        );
-      });
-    }
-  }
-
-  Future<void> _addFile() async {
-    final result = await FilePicker.platform.pickFiles();
-    if (result != null && result.files.isNotEmpty) {
-      setState(() {
-        attachments.add(
-          Attachment(
-            type: AttachmentType.file,
-            filePath: result.files.first.path!,
-            name: result.files.first.name,
-          ),
-        );
+        attachments.add(attach);
       });
     }
   }
 
   Future<void> _addAudio() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const RecordAudioPage()),
+    final result = await showModalBottomSheet<Map<String, String>>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => const RecordAudioSheet(),
     );
 
     if (result != null) {
@@ -108,12 +97,34 @@ class _EditNotePageState extends State<EditNotePage> {
         attachments.add(
           Attachment(
             type: AttachmentType.audio,
-            filePath: result['path'],
-            name: result['name'],
+            filePath: result['path']!,
+            name: result['name']!,
           ),
         );
       });
     }
+  }
+
+  Future<void> _playAudio(String path) async {
+    final file = File(path);
+    if (!await file.exists()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Arquivo de áudio não encontrado"),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    await player.setFilePath(path);
+    setState(() => isPlaying = true);
+    await player.play();
+  }
+
+  Future<void> _stopAudio() async {
+    setState(() => isPlaying = false);
+    await player.stop();
   }
 
   Future<void> _openFile(String path) async {
@@ -128,13 +139,8 @@ class _EditNotePageState extends State<EditNotePage> {
           IconButton(icon: const Icon(Icons.save), onPressed: _save),
           IconButton(icon: const Icon(Icons.delete), onPressed: _delete),
         ],
-
-        backgroundColor: Theme.of(context).brightness == Brightness.dark
-            ? Theme.of(context).colorScheme.primaryContainer
-            : Theme.of(context).colorScheme.primary,
-        foregroundColor: Theme.of(context).brightness == Brightness.dark
-            ? Theme.of(context).colorScheme.onPrimaryContainer
-            : Theme.of(context).colorScheme.onPrimary,
+        backgroundColor: ThemeHandler.getBackgroundColor(context),
+        foregroundColor: ThemeHandler.getForegroundColor(context),
       ),
       body: Column(
         children: [
@@ -145,8 +151,8 @@ class _EditNotePageState extends State<EditNotePage> {
             ),
             child: TextField(
               controller: titleController,
-              decoration: const InputDecoration(
-                hintText: "Título",
+              decoration: InputDecoration(
+                hintText: tr('title'),
                 border: InputBorder.none,
               ),
             ),
@@ -176,12 +182,36 @@ class _EditNotePageState extends State<EditNotePage> {
                           return Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: ActionChip(
-                              label: attachment.name != 'file'
-                                  ? Text(attachment.name)
-                                  : Text(tr("audio")),
-                              onPressed: () => _openFile(attachment.filePath),
+                              label: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    attachment.name != 'file'
+                                        ? attachment.name
+                                        : tr("audio"),
+                                    style: const TextStyle(fontSize: 16),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Icon(
+                                    isPlaying ? Icons.stop : Icons.play_arrow,
+                                    size: 22,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                  ),
+                                ],
+                              ),
+                              onPressed: () {
+                                if (isPlaying) {
+                                  _stopAudio();
+                                } else {
+                                  _playAudio(attachment.filePath);
+                                }
+                              },
                             ),
                           );
+
                         case AttachmentType.file:
                           return Padding(
                             padding: const EdgeInsets.all(8.0),
@@ -216,8 +246,8 @@ class _EditNotePageState extends State<EditNotePage> {
                 controller: contentController,
                 maxLines: null,
                 expands: true,
-                decoration: const InputDecoration(
-                  hintText: "Escreva sua nota...",
+                decoration: InputDecoration(
+                  hintText: tr('write_your_note'),
                   border: InputBorder.none,
                 ),
               ),
@@ -225,61 +255,9 @@ class _EditNotePageState extends State<EditNotePage> {
           ),
         ],
       ),
-      floatingActionButton: SpeedDial(
-        icon: Icons.add,
-        activeIcon: Icons.close,
-        backgroundColor: Theme.of(context).brightness == Brightness.dark
-            ? Theme.of(context).colorScheme.primaryContainer
-            : Theme.of(context).colorScheme.primary,
-        foregroundColor: Theme.of(context).brightness == Brightness.dark
-            ? Theme.of(context).colorScheme.onPrimaryContainer
-            : Theme.of(context).colorScheme.onPrimary,
-        children: [
-          SpeedDialChild(
-            child: const Icon(Icons.image),
-            label: tr("image"),
-            onTap: _addImage,
-            backgroundColor: Theme.of(context).brightness == Brightness.dark
-                ? Theme.of(context).colorScheme.primaryContainer
-                : Theme.of(context).colorScheme.primary,
-            foregroundColor: Theme.of(context).brightness == Brightness.dark
-                ? Theme.of(context).colorScheme.onPrimaryContainer
-                : Theme.of(context).colorScheme.onPrimary,
-          ),
-          SpeedDialChild(
-            child: const Icon(Icons.videocam),
-            label: tr("video"),
-            onTap: _addVideo,
-            backgroundColor: Theme.of(context).brightness == Brightness.dark
-                ? Theme.of(context).colorScheme.primaryContainer
-                : Theme.of(context).colorScheme.primary,
-            foregroundColor: Theme.of(context).brightness == Brightness.dark
-                ? Theme.of(context).colorScheme.onPrimaryContainer
-                : Theme.of(context).colorScheme.onPrimary,
-          ),
-          SpeedDialChild(
-            child: const Icon(Icons.mic),
-            label: tr("audio"),
-            onTap: _addAudio,
-            backgroundColor: Theme.of(context).brightness == Brightness.dark
-                ? Theme.of(context).colorScheme.primaryContainer
-                : Theme.of(context).colorScheme.primary,
-            foregroundColor: Theme.of(context).brightness == Brightness.dark
-                ? Theme.of(context).colorScheme.onPrimaryContainer
-                : Theme.of(context).colorScheme.onPrimary,
-          ),
-          SpeedDialChild(
-            child: const Icon(Icons.attach_file),
-            label: tr("file"),
-            onTap: _addFile,
-            backgroundColor: Theme.of(context).brightness == Brightness.dark
-                ? Theme.of(context).colorScheme.primaryContainer
-                : Theme.of(context).colorScheme.primary,
-            foregroundColor: Theme.of(context).brightness == Brightness.dark
-                ? Theme.of(context).colorScheme.onPrimaryContainer
-                : Theme.of(context).colorScheme.onPrimary,
-          ),
-        ],
+      floatingActionButton: AttachmentsFab(
+        onAddAttach: _addAttach,
+        onAddAudio: _addAudio,
       ),
     );
   }

@@ -7,7 +7,7 @@ import 'package:uniqnote/models/attachment.dart';
 import 'package:uniqnote/models/note.dart';
 import 'package:uniqnote/models/folder.dart';
 
-class DBHelper {
+class DatabaseService {
   static Database? _db;
 
   static Future<Database> get database async {
