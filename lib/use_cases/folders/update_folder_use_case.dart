@@ -10,4 +10,7 @@ class UpdateFolderUseCase {
 
   Future<int> renameFolder(int folderId, String newName) async =>
       await folderRepository.renameFolder(folderId, newName);
+
+  Future<int> protectFolder(int folderId) async =>
+      await folderRepository.protectFolder(folderId);
 }

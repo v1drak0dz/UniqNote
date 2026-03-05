@@ -21,8 +21,10 @@ import 'package:uniqnote/models/note.dart';
 import 'package:uniqnote/pages/edit_note_page.dart';
 import 'package:uniqnote/repositories/folder_repository.dart';
 import 'package:uniqnote/repositories/notes_repository.dart';
+import 'package:uniqnote/services/password_service.dart';
 import 'package:uniqnote/use_cases/folders/delete_folder_use_case.dart';
 import 'package:uniqnote/use_cases/folders/get_folder_use_case.dart';
+import 'package:uniqnote/use_cases/folders/update_folder_use_case.dart';
 import 'package:uniqnote/use_cases/notes/get_note_use_case.dart';
 
 class HomePage extends StatefulWidget {
@@ -59,9 +61,7 @@ class _HomePageState extends State<HomePage> {
       MaterialPageRoute(builder: (_) => EditNotePage(note: note)),
     );
 
-    if (updated == true) {
-      _loadAll();
-    }
+    _loadAll();
   }
 
   void _openFolder(Folder folder) {
@@ -136,6 +136,48 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Future<bool> showPasswordDialog(
+    BuildContext context,
+    String id,
+    Function(String) onCheck,
+  ) async {
+    final controller = TextEditingController();
+    bool isValid = false;
+
+    await showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Digite a senha"),
+        content: TextField(
+          controller: controller,
+          obscureText: true,
+          decoration: const InputDecoration(hintText: "Senha"),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancelar"),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              isValid = await onCheck(controller.text);
+              if (isValid) {
+                Navigator.pop(context);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Senha incorreta")),
+                );
+              }
+            },
+            child: const Text("OK"),
+          ),
+        ],
+      ),
+    );
+
+    return isValid;
+  }
+
   @override
   Widget build(BuildContext context) {
     final filteredNotes = notes
@@ -160,7 +202,7 @@ class _HomePageState extends State<HomePage> {
               Icons.palette,
               color: ThemeHandler.getForegroundColor(context),
             ),
-            onPressed: () => _openThemeSelector,
+            onPressed: () => _openThemeSelector(context),
           ),
 
           IconButton(
@@ -219,7 +261,35 @@ class _HomePageState extends State<HomePage> {
                         : tr("notes");
 
                     return GestureDetector(
-                      onTap: () => _openFolder(folder),
+                      onTap: () async {
+                        if (folder.isProtected == 1) {
+                          // Primeiro tenta desbloquear com biometria
+                          bool biometricUnlocked = await PasswordService()
+                              .requestBiometricUnlock();
+
+                          if (biometricUnlocked) {
+                            // Se biometria funcionou, abre direto
+                            _openFolder(folder);
+                          } else {
+                            // Se biometria falhou ou foi cancelada, pede senha manual
+                            bool unlocked = await showPasswordDialog(
+                              context,
+                              folder.id.toString(),
+                              (input) => PasswordService().checkPassword(
+                                folder.id.toString(),
+                                input,
+                              ),
+                            );
+
+                            if (unlocked) {
+                              _openFolder(folder);
+                            }
+                          }
+                        } else {
+                          _openFolder(folder);
+                        }
+                      },
+
                       onLongPress: () {
                         showModalBottomSheet(
                           context: context,
@@ -228,6 +298,72 @@ class _HomePageState extends State<HomePage> {
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
+                                  ListTile(
+                                    leading: const Icon(
+                                      Icons.lock,
+                                      color: Colors.amberAccent,
+                                    ),
+                                    title: folder.isProtected == 1
+                                        ? const Text("Desproteger")
+                                        : const Text("Proteger"),
+                                    onTap: () async {
+                                      if (folder.isProtected == 1) {
+                                        Navigator.pop(folderModalContext);
+                                        await PasswordService().removePassword(
+                                          folder.id.toString(),
+                                        );
+                                        await UpdateFolderUseCase(
+                                          FolderRepository(),
+                                        ).protectFolder(folder.id!);
+                                      } else {
+                                        final controller =
+                                            TextEditingController();
+                                        final result = await showDialog<String>(
+                                          context: context,
+                                          builder: (_) => AlertDialog(
+                                            title: const Text("Definir senha"),
+                                            content: TextField(
+                                              controller: controller,
+                                              obscureText: true,
+                                              decoration: const InputDecoration(
+                                                hintText: "Digite a senha",
+                                              ),
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () =>
+                                                    Navigator.pop(context),
+                                                child: const Text("Cancelar"),
+                                              ),
+                                              ElevatedButton(
+                                                onPressed: () {
+                                                  Navigator.pop(
+                                                    context,
+                                                    controller.text,
+                                                  );
+                                                },
+                                                child: const Text("Salvar"),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+
+                                        if (result != null &&
+                                            result.isNotEmpty) {
+                                          Navigator.pop(folderModalContext);
+                                          await PasswordService().setPassword(
+                                            folder.id.toString(),
+                                            result,
+                                          );
+                                          await UpdateFolderUseCase(
+                                            FolderRepository(),
+                                          ).protectFolder(folder.id!);
+                                        }
+                                      }
+
+                                      _loadAll();
+                                    },
+                                  ),
                                   ListTile(
                                     leading: Icon(
                                       Icons.delete,
@@ -287,19 +423,28 @@ class _HomePageState extends State<HomePage> {
                             children: [
                               Row(
                                 children: [
-                                  Icon(
-                                    Icons.folder,
-                                    size: 16,
-                                    color: themeOptions[folder.color].color,
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.folder,
+                                        size: 16,
+                                        color: themeOptions[folder.color].color,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        folder.name,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    folder.name,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
+                                  if (folder.isProtected == 1)
+                                    const Icon(
+                                      Icons.lock,
+                                      color: Colors.amberAccent,
                                     ),
-                                  ),
                                 ],
                               ),
 

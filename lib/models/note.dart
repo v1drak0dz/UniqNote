@@ -7,6 +7,7 @@ class Note {
   final DateTime createdAt;
   final DateTime modifiedAt;
   final int isFavorite;
+  final int isProtected;
   final int? folderId;
   final List<Attachment> attachments;
 
@@ -16,6 +17,7 @@ class Note {
     required this.content,
     required this.createdAt,
     required this.modifiedAt,
+    this.isProtected = 0,
     this.isFavorite = 0,
     this.attachments = const [],
     this.folderId,

@@ -25,6 +25,8 @@ class DatabaseService {
         '4_add_name_to_attachments.sql',
         '5_create_folders_add_to_notes.sql',
         '6_add_color_to_folders.sql',
+        '7_add_is_protected_to_notes.sql',
+        '8_add_is_protected_to_folders.sql',
       ],
     );
 

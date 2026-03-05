@@ -21,6 +21,15 @@
     "color_teal": "Teal",
     "color_pink": "Pink",
 
+    "pastel_color_grey": "Pastel Grey",
+    "pastel_color_blue": "Pastel Blue",
+    "pastel_color_red": "Pastel Red",
+    "pastel_color_green": "Pastel Green",
+    "pastel_color_orange": "Pastel Orange",
+    "pastel_color_purple": "Pastel Purple",
+    "pastel_color_teal": " Pastel Teal",
+    "pastel_color_pink": "Pastel Pink",
+
     "your_title": "Your title here",
     "move_to_folder": "Move to folder",
     "dark_mode": "Dark mode",

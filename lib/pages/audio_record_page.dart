@@ -19,6 +19,7 @@ class _RecordAudioSheetState extends State<RecordAudioSheet> {
   final recorder = AudioRecorder();
   final player = AudioPlayer();
   late final RecorderController waveController;
+  late final PlayerController playerController;
 
   bool isRecording = false;
   bool hasRecording = false;
@@ -36,6 +37,13 @@ class _RecordAudioSheetState extends State<RecordAudioSheet> {
   void initState() {
     super.initState();
     waveController = RecorderController();
+    playerController = PlayerController();
+
+    player.playerStateStream.listen((state) {
+      if (state.processingState == ProcessingState.completed) {
+        setState(() => isPlaying = false);
+      }
+    });
   }
 
   Future<String> _generatePath() async {
@@ -77,30 +85,67 @@ class _RecordAudioSheetState extends State<RecordAudioSheet> {
         seconds = 0;
       });
       startTimer();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Permissão de microfone negada")),
+      );
     }
   }
 
   Future<void> stopRecording() async {
-    final path = await recorder.stop(); // retorna o caminho do arquivo final
-    await waveController.stop();
-    stopTimer();
+    try {
+      final path = await recorder.stop();
+      await waveController.stop();
+      stopTimer();
 
-    setState(() {
-      filePath = path; // atualiza com o path real
-      isRecording = false;
-      hasRecording = true;
-    });
+      setState(() {
+        filePath = path;
+        isRecording = false;
+        hasRecording = path != null;
+      });
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Gravação finalizada")));
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Erro ao parar gravação: $e")));
+    }
   }
 
   Future<void> cancelRecording() async {
-    await recorder.stop();
-    await waveController.stop();
-    stopTimer();
-    if (filePath != null) {
-      final file = File(filePath!);
-      if (await file.exists()) await file.delete();
+    try {
+      if (isRecording) {
+        await recorder.stop();
+        await waveController.stop();
+        stopTimer();
+      }
+
+      if (filePath != null) {
+        final file = File(filePath!);
+        if (await file.exists()) {
+          await file.delete();
+        }
+      }
+
+      setState(() {
+        isRecording = false;
+        hasRecording = false;
+        filePath = null;
+        seconds = 0;
+      });
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Gravação cancelada")));
+
+      Navigator.pop(context);
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Erro ao cancelar gravação: $e")));
     }
-    Navigator.pop(context);
   }
 
   Future<void> playAudio() async {
@@ -108,11 +153,6 @@ class _RecordAudioSheetState extends State<RecordAudioSheet> {
     await player.setFilePath(filePath!);
     await player.play();
     setState(() => isPlaying = true);
-    player.playerStateStream.listen((state) {
-      if (state.processingState == ProcessingState.completed) {
-        setState(() => isPlaying = false);
-      }
-    });
   }
 
   Future<void> stopAudio() async {
@@ -121,12 +161,23 @@ class _RecordAudioSheetState extends State<RecordAudioSheet> {
   }
 
   void saveRecording() {
+    if (filePath == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Nenhuma gravação para salvar")),
+      );
+      return;
+    }
+
     Navigator.pop(context, {
       "path": filePath!,
       "name": nameController.text.isEmpty
           ? "audio"
           : nameController.text.trim(),
     });
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text("Áudio salvo com sucesso")));
   }
 
   @override
@@ -134,6 +185,7 @@ class _RecordAudioSheetState extends State<RecordAudioSheet> {
     recorder.dispose();
     player.dispose();
     waveController.dispose();
+    playerController.dispose();
     timer?.cancel();
     super.dispose();
   }
@@ -158,13 +210,19 @@ class _RecordAudioSheetState extends State<RecordAudioSheet> {
               style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
-            if (isRecording || hasRecording)
+
+            // 🔑 Aqui está a lógica: gravação → onda ao vivo, depois arquivo → onda persistente
+            if (isRecording)
               AudioWaveforms(
                 enableGesture: false,
-                size: Size(MediaQuery.of(context).size.width, 100),
+                size: Size(MediaQuery.of(context).size.width / 2, 200),
                 recorderController: waveController,
-                waveStyle: const WaveStyle(showMiddleLine: false),
+                waveStyle: const WaveStyle(
+                  showMiddleLine: false,
+                  extendWaveform: true,
+                ),
               ),
+
             const SizedBox(height: 30),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,

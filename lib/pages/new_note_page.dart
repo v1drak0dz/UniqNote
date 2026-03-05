@@ -49,6 +49,8 @@ class _NewNotePageState extends State<NewNotePage> {
     final title = titleController.text.trim();
     final content = contentController.text;
 
+    Navigator.pop(context, true);
+
     final noteId = await InsertNoteUseCase(
       NotesRepository(),
     ).insertNote(title, content, attachments);
@@ -56,8 +58,6 @@ class _NewNotePageState extends State<NewNotePage> {
     InsertAttachmentsUseCase(
       AttachmentsRepository(),
     ).insertAttachments(attachments, noteId);
-
-    Navigator.pop(context, true);
   }
 
   Future<void> _addAttach(AttachmentType attachType) async {

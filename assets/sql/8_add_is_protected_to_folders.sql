@@ -1,0 +1,1 @@
+ALTER TABLE folders ADD COLUMN is_protected INTEGER DEFAULT 0;

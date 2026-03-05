@@ -64,6 +64,7 @@ class NotesRepository {
           modifiedAt: DateTime.parse(row['modified_at'] as String),
           attachments: [],
           isFavorite: row['is_favorite'] as int,
+          isProtected: row['is_protected'] as int,
           folderId: row['folder_id'] != null
               ? int.tryParse(row['folder_id'].toString())
               : null,
@@ -103,6 +104,21 @@ class NotesRepository {
       '''
       UPDATE notes
          SET is_favorite = CASE is_favorite
+             WHEN 1 THEN 0
+             ELSE 1
+         END
+       WHERE id = ?
+      ''',
+      [id],
+    );
+  }
+
+  Future<int> protectNote(int id) async {
+    final db = await DatabaseService.database;
+    return await db.rawUpdate(
+      '''
+      UPDATE notes
+         SET is_protected = CASE is_protected
              WHEN 1 THEN 0
              ELSE 1
          END

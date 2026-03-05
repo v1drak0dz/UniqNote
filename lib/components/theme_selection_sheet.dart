@@ -14,68 +14,70 @@ class ThemeSelectorSheet extends StatelessWidget {
     return BlocBuilder<ThemeCubit, ThemeState>(
       builder: (context, state) {
         return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  tr("theme"),
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-
-                const SizedBox(height: 12),
-
-                // Lista de cores
-                ...List.generate(themeOptions.length, (index) {
-                  final option = themeOptions[index];
-
-                  return RadioListTile<int>(
-                    value: index,
-                    groupValue: state.themeIndex,
-                    onChanged: (value) {
-                      if (value == null) return;
-                      context.read<ThemeCubit>().setThemeIndex(value);
-                    },
-                    title: Row(
-                      children: [
-                        Container(
-                          width: 22,
-                          height: 22,
-                          decoration: BoxDecoration(
-                            color: option.color,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(tr(option.translationKey)),
-                      ],
+          child: SizedBox(
+            // height: MediaQuery.of(context).size.height * .4,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    tr("theme"),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
                     ),
-                  );
-                }),
+                  ),
 
-                const SizedBox(height: 8),
+                  const SizedBox(height: 12),
 
-                SwitchListTile(
-                  title: Text(tr("dark_mode")),
-                  value: state.isDarkMode,
-                  onChanged: (value) {
-                    context.read<ThemeCubit>().setThemeMode(value);
-                  },
-                ),
+                  ...List.generate(themeOptions.length, (index) {
+                    final option = themeOptions[index];
 
-                const SizedBox(height: 8.0),
+                    return RadioListTile<int>(
+                      value: index,
+                      groupValue: state.themeIndex,
+                      onChanged: (value) {
+                        if (value == null) return;
+                        context.read<ThemeCubit>().setThemeIndex(value);
+                      },
+                      title: Row(
+                        children: [
+                          Container(
+                            width: 22,
+                            height: 22,
+                            decoration: BoxDecoration(
+                              color: option.color,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(tr(option.translationKey)),
+                        ],
+                      ),
+                    );
+                  }),
 
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: Text(tr("apply")),
-                ),
-              ],
+                  const SizedBox(height: 8),
+
+                  SwitchListTile(
+                    title: Text(tr("dark_mode")),
+                    value: state.isDarkMode,
+                    onChanged: (value) {
+                      context.read<ThemeCubit>().setThemeMode(value);
+                    },
+                  ),
+
+                  const SizedBox(height: 8.0),
+
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text(tr("apply")),
+                  ),
+                ],
+              ),
             ),
           ),
         );

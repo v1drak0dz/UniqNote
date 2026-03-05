@@ -21,6 +21,15 @@
     "color_teal": "Ciano",
     "color_pink": "Rosa",
 
+    "pastel_color_grey": "Cinza Pastel",
+    "pastel_color_blue": "Azul Pastel",
+    "pastel_color_red": "Vermelho Pastel",
+    "pastel_color_green": "Verde Pastel",
+    "pastel_color_orange": "Laranja Pastel",
+    "pastel_color_purple": "Roxo Pastel",
+    "pastel_color_teal": "Ciano Pastel",
+    "pastel_color_pink": "Rosa Pastel",
+
     "your_title": "Seu titulo aqui",
     "move_to_folder": "Mover para pasta",
     "dark_mode": "Modo escuro",

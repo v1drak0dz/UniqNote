@@ -13,4 +13,7 @@ class UpdateNoteUseCase {
 
   Future<void> favoriteNote(int noteId) async =>
       await notesRepository.favoriteNode(noteId);
+
+  Future<void> protectNote(int noteId) async =>
+      await notesRepository.protectNote(noteId);
 }

@@ -46,4 +46,19 @@ class FolderRepository {
       whereArgs: [folderId],
     );
   }
+
+  Future<int> protectFolder(int id) async {
+    final db = await DatabaseService.database;
+    return await db.rawUpdate(
+      '''
+      UPDATE folders
+         SET is_protected = CASE is_protected
+             WHEN 1 THEN 0
+             ELSE 1
+         END
+       WHERE id = ?
+      ''',
+      [id],
+    );
+  }
 }
