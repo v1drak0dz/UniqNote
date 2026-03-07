@@ -1,0 +1,57 @@
+{
+    "notes": "Note",
+    "note": "Nota",
+    "delete": "Elimina",
+    "favorite": "Preferito",
+    "image": "Immagine",
+    "video": "Video",
+    "file": "File",
+    "audio": "Audio",
+    "folder": "Cartella",
+
+    "theme": "Tema",
+    "apply": "Applica",
+
+    "color_grey": "Grigio",
+    "color_blue": "Blu",
+    "color_red": "Rosso",
+    "color_green": "Verde",
+    "color_orange": "Arancione",
+    "color_purple": "Viola",
+    "color_teal": "Verde acqua",
+    "color_pink": "Rosa",
+
+    "pastel_color_grey": "Grigio pastello",
+    "pastel_color_blue": "Blu pastello",
+    "pastel_color_red": "Rosso pastello",
+    "pastel_color_green": "Verde pastello",
+    "pastel_color_orange": "Arancione pastello",
+    "pastel_color_purple": "Viola pastello",
+    "pastel_color_teal": "Verde acqua pastello",
+    "pastel_color_pink": "Rosa pastello",
+
+    "your_title": "Il tuo titolo qui",
+    "move_to_folder": "Sposta nella cartella",
+    "dark_mode": "Modalità scura",
+
+    "new_folder": "Nuova cartella",
+    "cancel": "Annulla",
+    "create": "Crea",
+
+    "no_folder": "Nessuna cartella",
+    "favorites": "Preferiti",
+    "folders": "Cartelle",
+    "audio_name": "Nome audio",
+
+    "rename": "Rinomina",
+    "rename_folder": "Rinomina cartella",
+    "folder_name": "Nome cartella",
+    "save": "Salva",
+    "folder_color": "Colore cartella",
+    "change_color": "Cambia colore",
+
+    "title": "Titolo",
+    "write_your_note": "Scrivi la tua nota...",
+
+    "unfavorite": "Rimuovi dai preferiti"
+}

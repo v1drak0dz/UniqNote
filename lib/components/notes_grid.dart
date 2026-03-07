@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:uniqnote/cross_cutting/consts/themes.dart';
 import 'package:uniqnote/cross_cutting/utils.dart';
 import 'package:uniqnote/models/attachment.dart';
 import 'package:uniqnote/models/note.dart';
@@ -292,7 +293,12 @@ class NotesGrid extends StatelessWidget {
                     }).toList(),
                   ),
 
-                  Text(contentLimited, style: TextStyle(fontSize: 10)),
+                  Text(
+                    contentLimited,
+                    style: themeFonts[note.fontIndex].font().copyWith(
+                      fontSize: 10,
+                    ),
+                  ),
                 ],
               ),
             ),

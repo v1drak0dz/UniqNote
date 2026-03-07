@@ -3,13 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:uniqnote/components/attachments_fab.dart';
+import 'package:uniqnote/cross_cutting/consts/themes.dart';
 import 'package:uniqnote/cross_cutting/theme_handler.dart';
 import 'package:uniqnote/cross_cutting/utils.dart';
 
 import 'package:uniqnote/models/attachment.dart';
 import 'package:uniqnote/pages/audio_record_page.dart';
+import 'package:uniqnote/services/states/theme/theme_cubit.dart';
+import 'package:uniqnote/services/states/theme/theme_state.dart';
 import 'package:uniqnote/strategies/attachmentStrategy/attachment_context.dart';
 
 import 'package:uniqnote/repositories/attachments_repository.dart';
@@ -28,6 +32,7 @@ class NewNotePage extends StatefulWidget {
 class _NewNotePageState extends State<NewNotePage> {
   final titleController = TextEditingController();
   final contentController = TextEditingController();
+  int font = 0;
   final dummyTitle = tr("your_title");
   final timestampTitle = generateTitle();
   final AudioPlayer player = AudioPlayer();
@@ -53,7 +58,7 @@ class _NewNotePageState extends State<NewNotePage> {
 
     final noteId = await InsertNoteUseCase(
       NotesRepository(),
-    ).insertNote(title, content, attachments);
+    ).insertNote(title, content, attachments, font);
 
     InsertAttachmentsUseCase(
       AttachmentsRepository(),
@@ -117,6 +122,34 @@ class _NewNotePageState extends State<NewNotePage> {
     await OpenFilex.open(path);
   }
 
+  void _openFontSelector() {
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return ListView(
+              children: List.generate(themeFonts.length, (index) {
+                final option = themeFonts[index];
+                return RadioListTile<int>(
+                  value: index,
+                  groupValue: font,
+                  onChanged: (value) {
+                    if (value == null) return;
+                    setState(() => font = value);
+                    this.setState(() {});
+                    Navigator.pop(ctx);
+                  },
+                  title: Text(option.key, style: option.font()),
+                );
+              }),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -126,6 +159,10 @@ class _NewNotePageState extends State<NewNotePage> {
           IconButton(
             icon: const Icon(Icons.auto_awesome),
             onPressed: () => titleController.text = generateTitle(),
+          ),
+          IconButton(
+            icon: const Icon(Icons.font_download),
+            onPressed: _openFontSelector,
           ),
         ],
         backgroundColor: ThemeHandler.getBackgroundColor(context),
@@ -229,6 +266,7 @@ class _NewNotePageState extends State<NewNotePage> {
               padding: const EdgeInsets.all(16.0),
               child: TextField(
                 controller: contentController,
+                style: themeFonts[font].font(),
                 maxLines: null,
                 expands: true,
                 decoration: InputDecoration(

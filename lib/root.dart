@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'package:uniqnote/cross_cutting/consts/themes.dart';
 import 'package:uniqnote/cross_cutting/theme_option.dart';
@@ -28,6 +29,7 @@ class MyApp extends StatelessWidget {
               brightness: Brightness.light,
               contrastLevel: ThemeOption.themeContrast,
             ),
+            textTheme: themeFonts[state.fontIndex].theme,
             useMaterial3: true,
           ),
           darkTheme: ThemeData(
@@ -36,6 +38,7 @@ class MyApp extends StatelessWidget {
               brightness: Brightness.dark,
               contrastLevel: ThemeOption.themeContrast,
             ),
+            textTheme: themeFonts[state.fontIndex].theme,
             useMaterial3: true,
           ),
           themeMode: state.isDarkMode ? ThemeMode.dark : ThemeMode.light,

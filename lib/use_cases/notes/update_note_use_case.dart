@@ -5,8 +5,12 @@ class UpdateNoteUseCase {
 
   UpdateNoteUseCase(this.notesRepository);
 
-  Future<void> updateNote(int noteId, String title, String content) async =>
-      await notesRepository.updateNote(noteId, title, content);
+  Future<void> updateNote(
+    int noteId,
+    String title,
+    String content,
+    int font,
+  ) async => await notesRepository.updateNote(noteId, title, content, font);
 
   Future<void> moveNoteToFolder(int noteId, int? folderId) async =>
       await notesRepository.moveNoteToFolder(noteId, folderId);

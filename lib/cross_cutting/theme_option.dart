@@ -8,3 +8,11 @@ class ThemeOption {
 
   static double themeContrast = 0.0;
 }
+
+class ThemeFontOption {
+  final String key;
+  final TextTheme theme;
+  final TextStyle Function({TextStyle? textStyle}) font;
+
+  const ThemeFontOption(this.key, this.theme, this.font);
+}

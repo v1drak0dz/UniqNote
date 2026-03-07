@@ -9,6 +9,7 @@ class Note {
   final int isFavorite;
   final int isProtected;
   final int? folderId;
+  final int fontIndex;
   final List<Attachment> attachments;
 
   Note({
@@ -19,6 +20,7 @@ class Note {
     required this.modifiedAt,
     this.isProtected = 0,
     this.isFavorite = 0,
+    this.fontIndex = 0,
     this.attachments = const [],
     this.folderId,
   });

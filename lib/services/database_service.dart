@@ -27,6 +27,7 @@ class DatabaseService {
         '6_add_color_to_folders.sql',
         '7_add_is_protected_to_notes.sql',
         '8_add_is_protected_to_folders.sql',
+        '9_add_font_to_note.sql',
       ],
     );
 

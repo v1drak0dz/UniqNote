@@ -7,11 +7,13 @@ class NotesRepository {
     String title,
     String content,
     List<Attachment> attachments,
+    int font,
   ) async {
     final db = await DatabaseService.database;
     final noteId = await db.insert('notes', {
       'title': title,
       'content': content,
+      'font_index': font,
       'created_at': DateTime.now().toIso8601String(),
       'modified_at': DateTime.now().toIso8601String(),
     });
@@ -25,7 +27,12 @@ class NotesRepository {
     await db.delete('notes', where: "id = ?", whereArgs: [noteId]);
   }
 
-  Future<void> updateNote(int noteId, String title, String content) async {
+  Future<void> updateNote(
+    int noteId,
+    String title,
+    String content,
+    int font,
+  ) async {
     final db = await DatabaseService.database;
 
     await db.update(
@@ -33,6 +40,7 @@ class NotesRepository {
       {
         'title': title,
         'content': content,
+        'font_index': font,
         'modified_at': DateTime.now().toIso8601String(),
       },
       where: 'id = ?',
@@ -65,6 +73,7 @@ class NotesRepository {
           attachments: [],
           isFavorite: row['is_favorite'] as int,
           isProtected: row['is_protected'] as int,
+          fontIndex: row['font_index'] as int? ?? 0,
           folderId: row['folder_id'] != null
               ? int.tryParse(row['folder_id'].toString())
               : null,

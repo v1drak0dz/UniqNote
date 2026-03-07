@@ -56,12 +56,14 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _openNote(Note note) async {
-    final updated = await Navigator.push(
+    final update = await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => EditNotePage(note: note)),
     );
 
-    _loadAll();
+    if (update) {
+      _loadAll();
+    }
   }
 
   void _openFolder(Folder folder) {

@@ -1,0 +1,57 @@
+{
+    "notes": "Notas",
+    "note": "Nota",
+    "delete": "Eliminar",
+    "favorite": "Favorito",
+    "image": "Imagen",
+    "video": "Vídeo",
+    "file": "Archivo",
+    "audio": "Audio",
+    "folder": "Carpeta",
+
+    "theme": "Tema",
+    "apply": "Aplicar",
+
+    "color_grey": "Gris",
+    "color_blue": "Azul",
+    "color_red": "Rojo",
+    "color_green": "Verde",
+    "color_orange": "Naranja",
+    "color_purple": "Morado",
+    "color_teal": "Verde azulado",
+    "color_pink": "Rosa",
+
+    "pastel_color_grey": "Gris pastel",
+    "pastel_color_blue": "Azul pastel",
+    "pastel_color_red": "Rojo pastel",
+    "pastel_color_green": "Verde pastel",
+    "pastel_color_orange": "Naranja pastel",
+    "pastel_color_purple": "Morado pastel",
+    "pastel_color_teal": "Verde azulado pastel",
+    "pastel_color_pink": "Rosa pastel",
+
+    "your_title": "Tu título aquí",
+    "move_to_folder": "Mover a carpeta",
+    "dark_mode": "Modo oscuro",
+
+    "new_folder": "Nueva carpeta",
+    "cancel": "Cancelar",
+    "create": "Crear",
+
+    "no_folder": "Sin carpeta",
+    "favorites": "Favoritos",
+    "folders": "Carpetas",
+    "audio_name": "Nombre del audio",
+
+    "rename": "Renombrar",
+    "rename_folder": "Renombrar carpeta",
+    "folder_name": "Nombre de carpeta",
+    "save": "Guardar",
+    "folder_color": "Color de carpeta",
+    "change_color": "Cambiar color",
+
+    "title": "Título",
+    "write_your_note": "Escribe tu nota...",
+
+    "unfavorite": "Quitar de favoritos"
+}

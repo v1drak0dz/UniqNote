@@ -10,8 +10,14 @@ class InsertNoteUseCase {
     String title,
     String content,
     List<Attachment> attachments,
+    int font,
   ) async {
-    final noteId = notesRepository.createNote(title, content, attachments);
+    final noteId = notesRepository.createNote(
+      title,
+      content,
+      attachments,
+      font,
+    );
 
     return noteId;
   }

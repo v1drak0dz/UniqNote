@@ -1,0 +1,57 @@
+{
+    "notes": "Notizen",
+    "note": "Notiz",
+    "delete": "Löschen",
+    "favorite": "Favorit",
+    "image": "Bild",
+    "video": "Video",
+    "file": "Datei",
+    "audio": "Audio",
+    "folder": "Ordner",
+
+    "theme": "Thema",
+    "apply": "Anwenden",
+
+    "color_grey": "Grau",
+    "color_blue": "Blau",
+    "color_red": "Rot",
+    "color_green": "Grün",
+    "color_orange": "Orange",
+    "color_purple": "Lila",
+    "color_teal": "Türkis",
+    "color_pink": "Rosa",
+
+    "pastel_color_grey": "Pastellgrau",
+    "pastel_color_blue": "Pastellblau",
+    "pastel_color_red": "Pastellrot",
+    "pastel_color_green": "Pastellgrün",
+    "pastel_color_orange": "Pastellorange",
+    "pastel_color_purple": "Pastelllila",
+    "pastel_color_teal": "Pastelltürkis",
+    "pastel_color_pink": "Pastellrosa",
+
+    "your_title": "Dein Titel hier",
+    "move_to_folder": "In Ordner verschieben",
+    "dark_mode": "Dunkelmodus",
+
+    "new_folder": "Neuer Ordner",
+    "cancel": "Abbrechen",
+    "create": "Erstellen",
+
+    "no_folder": "Kein Ordner",
+    "favorites": "Favoriten",
+    "folders": "Ordner",
+    "audio_name": "Audioname",
+
+    "rename": "Umbenennen",
+    "rename_folder": "Ordner umbenennen",
+    "folder_name": "Ordnername",
+    "save": "Speichern",
+    "folder_color": "Ordnerfarbe",
+    "change_color": "Farbe ändern",
+
+    "title": "Titel",
+    "write_your_note": "Schreibe deine Notiz...",
+
+    "unfavorite": "Aus Favoriten entfernen"
+}

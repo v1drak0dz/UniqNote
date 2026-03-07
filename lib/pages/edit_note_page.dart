@@ -4,6 +4,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:uniqnote/components/attachments_fab.dart';
+import 'package:uniqnote/cross_cutting/consts/themes.dart';
 import 'package:uniqnote/cross_cutting/theme_handler.dart';
 
 import 'package:uniqnote/models/attachment.dart';
@@ -33,6 +34,7 @@ class _EditNotePageState extends State<EditNotePage> {
   bool isPlaying = false;
 
   late List<Attachment> attachments;
+  late int font = 0; // índice da fonte
 
   @override
   void initState() {
@@ -40,6 +42,8 @@ class _EditNotePageState extends State<EditNotePage> {
     titleController = TextEditingController(text: widget.note.title);
     contentController = TextEditingController(text: widget.note.content);
     attachments = List<Attachment>.from(widget.note.attachments);
+
+    font = widget.note.fontIndex; // carrega fonte da nota
 
     player.playerStateStream.listen((state) {
       if (state.processingState == ProcessingState.completed) {
@@ -53,13 +57,15 @@ class _EditNotePageState extends State<EditNotePage> {
     final title = titleController.text.trim();
     final content = contentController.text;
 
-    Navigator.pop(context, true);
-
-    await UpdateNoteUseCase(NotesRepository()).updateNote(id, title, content);
+    await UpdateNoteUseCase(
+      NotesRepository(),
+    ).updateNote(id, title, content, font);
 
     await UpdateAttachmentsUseCase(
       AttachmentsRepository(),
     ).updateAttachments(id, attachments);
+
+    Navigator.pop(context, true);
   }
 
   void _delete() async {
@@ -131,6 +137,34 @@ class _EditNotePageState extends State<EditNotePage> {
     await OpenFilex.open(path);
   }
 
+  void _openFontSelector() {
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return ListView(
+              children: List.generate(themeFonts.length, (index) {
+                final option = themeFonts[index];
+                return RadioListTile<int>(
+                  value: index,
+                  groupValue: font,
+                  onChanged: (value) {
+                    if (value == null) return;
+                    setState(() => font = value);
+                    this.setState(() {}); // força rebuild da página
+                    Navigator.pop(ctx);
+                  },
+                  title: Text(option.key, style: option.font()),
+                );
+              }),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -138,6 +172,10 @@ class _EditNotePageState extends State<EditNotePage> {
         actions: [
           IconButton(icon: const Icon(Icons.save), onPressed: _save),
           IconButton(icon: const Icon(Icons.delete), onPressed: _delete),
+          IconButton(
+            icon: const Icon(Icons.font_download),
+            onPressed: _openFontSelector,
+          ),
         ],
         backgroundColor: ThemeHandler.getBackgroundColor(context),
         foregroundColor: ThemeHandler.getForegroundColor(context),
@@ -157,7 +195,6 @@ class _EditNotePageState extends State<EditNotePage> {
               ),
             ),
           ),
-
           Divider(
             indent: 24.0,
             endIndent: 24.0,
@@ -211,7 +248,6 @@ class _EditNotePageState extends State<EditNotePage> {
                               },
                             ),
                           );
-
                         case AttachmentType.file:
                           return Padding(
                             padding: const EdgeInsets.all(8.0),
@@ -244,6 +280,7 @@ class _EditNotePageState extends State<EditNotePage> {
               ),
               child: TextField(
                 controller: contentController,
+                style: themeFonts[font].font(), // aplica fonte escolhida
                 maxLines: null,
                 expands: true,
                 decoration: InputDecoration(

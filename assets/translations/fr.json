@@ -1,0 +1,57 @@
+{
+    "notes": "Notes",
+    "note": "Note",
+    "delete": "Supprimer",
+    "favorite": "Favori",
+    "image": "Image",
+    "video": "Vidéo",
+    "file": "Fichier",
+    "audio": "Audio",
+    "folder": "Dossier",
+
+    "theme": "Thème",
+    "apply": "Appliquer",
+
+    "color_grey": "Gris",
+    "color_blue": "Bleu",
+    "color_red": "Rouge",
+    "color_green": "Vert",
+    "color_orange": "Orange",
+    "color_purple": "Violet",
+    "color_teal": "Turquoise",
+    "color_pink": "Rose",
+
+    "pastel_color_grey": "Gris pastel",
+    "pastel_color_blue": "Bleu pastel",
+    "pastel_color_red": "Rouge pastel",
+    "pastel_color_green": "Vert pastel",
+    "pastel_color_orange": "Orange pastel",
+    "pastel_color_purple": "Violet pastel",
+    "pastel_color_teal": "Turquoise pastel",
+    "pastel_color_pink": "Rose pastel",
+
+    "your_title": "Votre titre ici",
+    "move_to_folder": "Déplacer vers le dossier",
+    "dark_mode": "Mode sombre",
+
+    "new_folder": "Nouveau dossier",
+    "cancel": "Annuler",
+    "create": "Créer",
+
+    "no_folder": "Aucun dossier",
+    "favorites": "Favoris",
+    "folders": "Dossiers",
+    "audio_name": "Nom de l'audio",
+
+    "rename": "Renommer",
+    "rename_folder": "Renommer le dossier",
+    "folder_name": "Nom du dossier",
+    "save": "Sauvegarder",
+    "folder_color": "Couleur du dossier",
+    "change_color": "Changer la couleur",
+
+    "title": "Titre",
+    "write_your_note": "Écrivez votre note...",
+
+    "unfavorite": "Retirer des favoris"
+}

@@ -11,7 +11,14 @@ void main() async {
 
   runApp(
     EasyLocalization(
-      supportedLocales: const [Locale('en'), Locale('pt')],
+      supportedLocales: const [
+        Locale('en'),
+        Locale('pt'),
+        Locale('de'),
+        Locale('es'),
+        Locale('fr'),
+        Locale('it'),
+      ],
       path: 'assets/translations',
       fallbackLocale: const Locale('en'),
       child: BlocProvider(create: (_) => ThemeCubit(), child: const MyApp()),

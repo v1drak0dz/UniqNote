@@ -1,0 +1,1 @@
+ALTER TABLE notes ADD COLUMN font_index INTEGER DEFAULT 0;
