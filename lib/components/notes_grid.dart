@@ -234,7 +234,7 @@ class NotesGrid extends StatelessWidget {
                       Expanded(
                         child: Text(
                           note.title,
-                          style: const TextStyle(
+                          style: themeFonts[note.fontIndex].font().copyWith(
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
                           ),
@@ -258,47 +258,49 @@ class NotesGrid extends StatelessWidget {
                     "${date.day}/${date.month}/${date.year}",
                     style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   ),
-                  const Divider(),
-                  Wrap(
-                    spacing: 4,
-                    children: countedAttachments.entries.map((entry) {
-                      final typ = entry.key;
-                      final count = entry.value;
-                      var ico = Icons.attach_file;
+                  if (note.isProtected == 0) ...[
+                    const Divider(),
+                    Wrap(
+                      spacing: 4,
+                      children: countedAttachments.entries.map((entry) {
+                        final typ = entry.key;
+                        final count = entry.value;
+                        var ico = Icons.attach_file;
 
-                      switch (typ) {
-                        case AttachmentType.image:
-                          ico = Icons.image;
-                        case AttachmentType.audio:
-                          ico = Icons.audiotrack;
-                        case AttachmentType.file:
-                          ico = Icons.attach_file;
-                        case AttachmentType.video:
-                          ico = Icons.videocam;
-                      }
+                        switch (typ) {
+                          case AttachmentType.image:
+                            ico = Icons.image;
+                          case AttachmentType.audio:
+                            ico = Icons.audiotrack;
+                          case AttachmentType.file:
+                            ico = Icons.attach_file;
+                          case AttachmentType.video:
+                            ico = Icons.videocam;
+                        }
 
-                      return Padding(
-                        padding: EdgeInsetsGeometry.symmetric(
-                          horizontal: 2,
-                          vertical: 4,
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(ico, size: 16),
-                            Text(count.toString()),
-                          ],
-                        ),
-                      );
-                    }).toList(),
-                  ),
-
-                  Text(
-                    contentLimited,
-                    style: themeFonts[note.fontIndex].font().copyWith(
-                      fontSize: 10,
+                        return Padding(
+                          padding: EdgeInsetsGeometry.symmetric(
+                            horizontal: 2,
+                            vertical: 4,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(ico, size: 16),
+                              Text(count.toString()),
+                            ],
+                          ),
+                        );
+                      }).toList(),
                     ),
-                  ),
+
+                    Text(
+                      contentLimited,
+                      style: themeFonts[note.fontIndex].font().copyWith(
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
@@ -20,7 +21,9 @@ import 'package:uniqnote/repositories/attachments_repository.dart';
 import 'package:uniqnote/repositories/notes_repository.dart';
 
 import 'package:uniqnote/use_cases/attachments/insert_attachments_use_case.dart';
+import 'package:uniqnote/use_cases/attachments/update_attachments_use_case.dart';
 import 'package:uniqnote/use_cases/notes/insert_note_use_case.dart';
+import 'package:uniqnote/use_cases/notes/update_note_use_case.dart';
 
 class NewNotePage extends StatefulWidget {
   const NewNotePage({super.key});
@@ -29,7 +32,7 @@ class NewNotePage extends StatefulWidget {
   State<NewNotePage> createState() => _NewNotePageState();
 }
 
-class _NewNotePageState extends State<NewNotePage> {
+class _NewNotePageState extends State<NewNotePage> with WidgetsBindingObserver {
   final titleController = TextEditingController();
   final contentController = TextEditingController();
   int font = 0;
@@ -37,32 +40,73 @@ class _NewNotePageState extends State<NewNotePage> {
   final timestampTitle = generateTitle();
   final AudioPlayer player = AudioPlayer();
   bool isPlaying = false;
+  bool isSaved = false;
+  int noteId = 0;
+  Timer? _debounce;
 
   List<Attachment> attachments = [];
 
   @override
   void initState() {
     super.initState();
+
+    WidgetsBinding.instance.addObserver(this);
+
     player.playerStateStream.listen((state) {
       if (state.processingState == ProcessingState.completed) {
         setState(() => isPlaying = false);
       }
     });
+    _debounce = Timer.periodic(const Duration(seconds: 30), (timer) => _save());
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      _save();
+    }
   }
 
   void _save() async {
     final title = titleController.text.trim();
     final content = contentController.text;
 
-    Navigator.pop(context, true);
+    if (isSaved) {
+      await UpdateNoteUseCase(
+        NotesRepository(),
+      ).updateNote(noteId, title, content, font);
 
-    final noteId = await InsertNoteUseCase(
-      NotesRepository(),
-    ).insertNote(title, content, attachments, font);
+      await UpdateAttachmentsUseCase(
+        AttachmentsRepository(),
+      ).updateAttachments(noteId, attachments);
+    } else {
+      final localNoteId = await InsertNoteUseCase(
+        NotesRepository(),
+      ).insertNote(title, content, attachments, font);
 
-    InsertAttachmentsUseCase(
-      AttachmentsRepository(),
-    ).insertAttachments(attachments, noteId);
+      InsertAttachmentsUseCase(
+        AttachmentsRepository(),
+      ).insertAttachments(attachments, localNoteId);
+
+      setState(() {
+        isSaved = true;
+        noteId = localNoteId;
+      });
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text("Conteudo salvo!"),
+        backgroundColor: Colors.green,
+      ),
+    );
   }
 
   Future<void> _addAttach(AttachmentType attachType) async {
@@ -154,8 +198,15 @@ class _NewNotePageState extends State<NewNotePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          onPressed: () {
+            _save();
+            Navigator.of(context).pop();
+          },
+          icon: const Icon(Icons.arrow_back),
+        ),
         actions: [
-          IconButton(icon: const Icon(Icons.save), onPressed: _save),
+          IconButton(icon: const Icon(Icons.save), onPressed: () => _save()),
           IconButton(
             icon: const Icon(Icons.auto_awesome),
             onPressed: () => titleController.text = generateTitle(),
@@ -181,6 +232,7 @@ class _NewNotePageState extends State<NewNotePage> {
                 hintText: tr("Título"),
                 border: InputBorder.none,
               ),
+              style: themeFonts[font].font(),
             ),
           ),
           Divider(

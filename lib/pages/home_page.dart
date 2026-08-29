@@ -61,9 +61,7 @@ class _HomePageState extends State<HomePage> {
       MaterialPageRoute(builder: (_) => EditNotePage(note: note)),
     );
 
-    if (update) {
-      _loadAll();
-    }
+    _loadAll();
   }
 
   void _openFolder(Folder folder) {
@@ -223,281 +221,301 @@ class _HomePageState extends State<HomePage> {
       ),
 
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        child: RefreshIndicator.adaptive(
+          onRefresh: () => _loadAll(),
+          child: ListView(
+            padding: const EdgeInsets.all(8),
             children: [
-              if (folders.isNotEmpty) ...[
-                const SizedBox(height: 8),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (folders.isNotEmpty) ...[
+                    const SizedBox(height: 8),
 
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8, top: 8),
-                  child: Row(
-                    children: [
-                      Icon(Icons.folder, color: Colors.amber),
-                      const SizedBox(width: 6),
-                      Text(
-                        tr("folders"),
-                        style: Theme.of(context).textTheme.titleMedium!
-                            .copyWith(fontWeight: FontWeight.bold),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8, top: 8),
+                      child: Row(
+                        children: [
+                          Icon(Icons.folder, color: Colors.amber),
+                          const SizedBox(width: 6),
+                          Text(
+                            tr("folders"),
+                            style: Theme.of(context).textTheme.titleMedium!
+                                .copyWith(fontWeight: FontWeight.bold),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
+                    ),
 
-                MasonryGridView.count(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 8,
-                  crossAxisSpacing: 8,
-                  itemCount: folders.length,
-                  itemBuilder: (_, i) {
-                    final folder = folders[i];
-                    final notesInFolder = notes
-                        .where((x) => x.folderId == folder.id)
-                        .length;
-                    final description = notesInFolder == 1
-                        ? tr("note")
-                        : tr("notes");
+                    MasonryGridView.count(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisCount: 2,
+                      mainAxisSpacing: 8,
+                      crossAxisSpacing: 8,
+                      itemCount: folders.length,
+                      itemBuilder: (_, i) {
+                        final folder = folders[i];
+                        final notesInFolder = notes
+                            .where((x) => x.folderId == folder.id)
+                            .length;
+                        final description = notesInFolder == 1
+                            ? tr("note")
+                            : tr("notes");
 
-                    return GestureDetector(
-                      onTap: () async {
-                        if (folder.isProtected == 1) {
-                          // Primeiro tenta desbloquear com biometria
-                          bool biometricUnlocked = await PasswordService()
-                              .requestBiometricUnlock();
+                        return GestureDetector(
+                          onTap: () async {
+                            if (folder.isProtected == 1) {
+                              // Primeiro tenta desbloquear com biometria
+                              bool biometricUnlocked = await PasswordService()
+                                  .requestBiometricUnlock();
 
-                          if (biometricUnlocked) {
-                            // Se biometria funcionou, abre direto
-                            _openFolder(folder);
-                          } else {
-                            // Se biometria falhou ou foi cancelada, pede senha manual
-                            bool unlocked = await showPasswordDialog(
-                              context,
-                              folder.id.toString(),
-                              (input) => PasswordService().checkPassword(
-                                folder.id.toString(),
-                                input,
-                              ),
-                            );
+                              if (biometricUnlocked) {
+                                // Se biometria funcionou, abre direto
+                                _openFolder(folder);
+                              } else {
+                                // Se biometria falhou ou foi cancelada, pede senha manual
+                                bool unlocked = await showPasswordDialog(
+                                  context,
+                                  folder.id.toString(),
+                                  (input) => PasswordService().checkPassword(
+                                    folder.id.toString(),
+                                    input,
+                                  ),
+                                );
 
-                            if (unlocked) {
+                                if (unlocked) {
+                                  _openFolder(folder);
+                                }
+                              }
+                            } else {
                               _openFolder(folder);
                             }
-                          }
-                        } else {
-                          _openFolder(folder);
-                        }
-                      },
-
-                      onLongPress: () {
-                        showModalBottomSheet(
-                          context: context,
-                          builder: (folderModalContext) {
-                            return SafeArea(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  ListTile(
-                                    leading: const Icon(
-                                      Icons.lock,
-                                      color: Colors.amberAccent,
-                                    ),
-                                    title: folder.isProtected == 1
-                                        ? const Text("Desproteger")
-                                        : const Text("Proteger"),
-                                    onTap: () async {
-                                      if (folder.isProtected == 1) {
-                                        Navigator.pop(folderModalContext);
-                                        await PasswordService().removePassword(
-                                          folder.id.toString(),
-                                        );
-                                        await UpdateFolderUseCase(
-                                          FolderRepository(),
-                                        ).protectFolder(folder.id!);
-                                      } else {
-                                        final controller =
-                                            TextEditingController();
-                                        final result = await showDialog<String>(
-                                          context: context,
-                                          builder: (_) => AlertDialog(
-                                            title: const Text("Definir senha"),
-                                            content: TextField(
-                                              controller: controller,
-                                              obscureText: true,
-                                              decoration: const InputDecoration(
-                                                hintText: "Digite a senha",
-                                              ),
-                                            ),
-                                            actions: [
-                                              TextButton(
-                                                onPressed: () =>
-                                                    Navigator.pop(context),
-                                                child: const Text("Cancelar"),
-                                              ),
-                                              ElevatedButton(
-                                                onPressed: () {
-                                                  Navigator.pop(
-                                                    context,
-                                                    controller.text,
-                                                  );
-                                                },
-                                                child: const Text("Salvar"),
-                                              ),
-                                            ],
-                                          ),
-                                        );
-
-                                        if (result != null &&
-                                            result.isNotEmpty) {
-                                          Navigator.pop(folderModalContext);
-                                          await PasswordService().setPassword(
-                                            folder.id.toString(),
-                                            result,
-                                          );
-                                          await UpdateFolderUseCase(
-                                            FolderRepository(),
-                                          ).protectFolder(folder.id!);
-                                        }
-                                      }
-
-                                      _loadAll();
-                                    },
-                                  ),
-                                  ListTile(
-                                    leading: Icon(
-                                      Icons.delete,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.error,
-                                    ),
-                                    title: Text(tr("delete")),
-                                    onTap: () async {
-                                      Navigator.pop(folderModalContext);
-                                      await DeleteFolderUseCase(
-                                        folderRepository: FolderRepository(),
-                                      ).deleteFolder(folder.id!);
-                                      _loadAll();
-                                    },
-                                  ),
-                                  ListTile(
-                                    leading: Icon(
-                                      Icons.drive_file_rename_outline,
-                                      color: Colors.amber,
-                                    ),
-                                    title: Text(tr("rename")),
-                                    onTap: () {
-                                      Navigator.pop(folderModalContext);
-                                      _renameFolderModal(folder);
-                                    },
-                                  ),
-                                  ListTile(
-                                    leading: Icon(Icons.palette),
-                                    title: Text(tr("change_color")),
-                                    onTap: () {
-                                      Navigator.pop(folderModalContext);
-                                      openFolderColorSelector(
-                                        folderModalContext,
-                                        folder.color,
-                                        folder.id!,
-                                      );
-                                    },
-                                  ),
-                                ],
-                              ),
-                            );
                           },
-                        );
-                      },
-                      child: Card(
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14.0),
-                        ),
-                        surfaceTintColor: themeOptions[folder.color].color,
-                        child: Padding(
-                          padding: const EdgeInsets.all(10.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Row(
-                                children: [
-                                  Row(
+
+                          onLongPress: () {
+                            showModalBottomSheet(
+                              context: context,
+                              builder: (folderModalContext) {
+                                return SafeArea(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(
-                                        Icons.folder,
-                                        size: 16,
-                                        color: themeOptions[folder.color].color,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        folder.name,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
+                                      ListTile(
+                                        leading: const Icon(
+                                          Icons.lock,
+                                          color: Colors.amberAccent,
                                         ),
+                                        title: folder.isProtected == 1
+                                            ? const Text("Desproteger")
+                                            : const Text("Proteger"),
+                                        onTap: () async {
+                                          if (folder.isProtected == 1) {
+                                            Navigator.pop(folderModalContext);
+                                            await PasswordService()
+                                                .removePassword(
+                                                  folder.id.toString(),
+                                                );
+                                            await UpdateFolderUseCase(
+                                              FolderRepository(),
+                                            ).protectFolder(folder.id!);
+                                          } else {
+                                            final controller =
+                                                TextEditingController();
+                                            final result =
+                                                await showDialog<String>(
+                                                  context: context,
+                                                  builder: (_) => AlertDialog(
+                                                    title: const Text(
+                                                      "Definir senha",
+                                                    ),
+                                                    content: TextField(
+                                                      controller: controller,
+                                                      obscureText: true,
+                                                      decoration:
+                                                          const InputDecoration(
+                                                            hintText:
+                                                                "Digite a senha",
+                                                          ),
+                                                    ),
+                                                    actions: [
+                                                      TextButton(
+                                                        onPressed: () =>
+                                                            Navigator.pop(
+                                                              context,
+                                                            ),
+                                                        child: const Text(
+                                                          "Cancelar",
+                                                        ),
+                                                      ),
+                                                      ElevatedButton(
+                                                        onPressed: () {
+                                                          Navigator.pop(
+                                                            context,
+                                                            controller.text,
+                                                          );
+                                                        },
+                                                        child: const Text(
+                                                          "Salvar",
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                );
+
+                                            if (result != null &&
+                                                result.isNotEmpty) {
+                                              Navigator.pop(folderModalContext);
+                                              await PasswordService()
+                                                  .setPassword(
+                                                    folder.id.toString(),
+                                                    result,
+                                                  );
+                                              await UpdateFolderUseCase(
+                                                FolderRepository(),
+                                              ).protectFolder(folder.id!);
+                                            }
+                                          }
+
+                                          _loadAll();
+                                        },
+                                      ),
+                                      ListTile(
+                                        leading: Icon(
+                                          Icons.delete,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.error,
+                                        ),
+                                        title: Text(tr("delete")),
+                                        onTap: () async {
+                                          Navigator.pop(folderModalContext);
+                                          await DeleteFolderUseCase(
+                                            folderRepository:
+                                                FolderRepository(),
+                                          ).deleteFolder(folder.id!);
+                                          _loadAll();
+                                        },
+                                      ),
+                                      ListTile(
+                                        leading: Icon(
+                                          Icons.drive_file_rename_outline,
+                                          color: Colors.amber,
+                                        ),
+                                        title: Text(tr("rename")),
+                                        onTap: () {
+                                          Navigator.pop(folderModalContext);
+                                          _renameFolderModal(folder);
+                                        },
+                                      ),
+                                      ListTile(
+                                        leading: Icon(Icons.palette),
+                                        title: Text(tr("change_color")),
+                                        onTap: () {
+                                          Navigator.pop(folderModalContext);
+                                          openFolderColorSelector(
+                                            folderModalContext,
+                                            folder.color,
+                                            folder.id!,
+                                          );
+                                        },
                                       ),
                                     ],
                                   ),
-                                  if (folder.isProtected == 1)
-                                    const Icon(
-                                      Icons.lock,
-                                      color: Colors.amberAccent,
-                                    ),
-                                ],
-                              ),
-
-                              const SizedBox(height: 6.0),
-                              Row(
+                                );
+                              },
+                            );
+                          },
+                          child: Card(
+                            elevation: 2,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14.0),
+                            ),
+                            surfaceTintColor: themeOptions[folder.color].color,
+                            child: Padding(
+                              padding: const EdgeInsets.all(10.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Text(
-                                    "$notesInFolder $description",
-                                    style: TextStyle(fontSize: 16),
+                                  Row(
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.folder,
+                                            size: 16,
+                                            color: themeOptions[folder.color]
+                                                .color,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            folder.name,
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      if (folder.isProtected == 1)
+                                        const Icon(
+                                          Icons.lock,
+                                          color: Colors.amberAccent,
+                                        ),
+                                    ],
+                                  ),
+
+                                  const SizedBox(height: 6.0),
+                                  Row(
+                                    children: [
+                                      Text(
+                                        "$notesInFolder $description",
+                                        style: TextStyle(fontSize: 16),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
-                            ],
+                            ),
                           ),
-                        ),
+                        );
+                      },
+                    ),
+
+                    const SizedBox(height: 16),
+                  ],
+
+                  if (noFolder.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8, top: 8),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.description,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            tr("notes"),
+                            style: Theme.of(context).textTheme.titleMedium!
+                                .copyWith(fontWeight: FontWeight.bold),
+                          ),
+                        ],
                       ),
-                    );
-                  },
-                ),
+                    ),
 
-                const SizedBox(height: 16),
-              ],
-
-              if (noFolder.isNotEmpty) ...[
-                const SizedBox(height: 8),
-
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8, top: 8),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.description,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        tr("notes"),
-                        style: Theme.of(context).textTheme.titleMedium!
-                            .copyWith(fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ),
-
-                NotesGrid(
-                  loadAll: _loadAll,
-                  notes: noFolder,
-                  openMoveToFolder: _openMoveToFolderModal,
-                  openNote: _openNote,
-                ),
-              ],
+                    NotesGrid(
+                      loadAll: _loadAll,
+                      notes: noFolder,
+                      openMoveToFolder: _openMoveToFolderModal,
+                      openNote: _openNote,
+                    ),
+                  ],
+                ],
+              ),
             ],
           ),
         ),

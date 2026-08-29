@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
@@ -27,11 +28,13 @@ class EditNotePage extends StatefulWidget {
   State<EditNotePage> createState() => _EditNotePageState();
 }
 
-class _EditNotePageState extends State<EditNotePage> {
+class _EditNotePageState extends State<EditNotePage>
+    with WidgetsBindingObserver {
   late TextEditingController titleController;
   late TextEditingController contentController;
   final AudioPlayer player = AudioPlayer();
   bool isPlaying = false;
+  Timer? _debounce;
 
   late List<Attachment> attachments;
   late int font = 0; // índice da fonte
@@ -39,6 +42,9 @@ class _EditNotePageState extends State<EditNotePage> {
   @override
   void initState() {
     super.initState();
+
+    WidgetsBinding.instance.addObserver(this);
+
     titleController = TextEditingController(text: widget.note.title);
     contentController = TextEditingController(text: widget.note.content);
     attachments = List<Attachment>.from(widget.note.attachments);
@@ -50,6 +56,23 @@ class _EditNotePageState extends State<EditNotePage> {
         setState(() => isPlaying = false);
       }
     });
+
+    _debounce = Timer.periodic(const Duration(seconds: 30), (timer) => _save());
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      _save();
+    }
   }
 
   void _save() async {
@@ -65,7 +88,12 @@ class _EditNotePageState extends State<EditNotePage> {
       AttachmentsRepository(),
     ).updateAttachments(id, attachments);
 
-    Navigator.pop(context, true);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text("Conteudo salvo!"),
+        backgroundColor: Colors.green,
+      ),
+    );
   }
 
   void _delete() async {
@@ -169,8 +197,20 @@ class _EditNotePageState extends State<EditNotePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          onPressed: () {
+            _save();
+            Navigator.of(context).pop();
+          },
+          icon: const Icon(Icons.arrow_back),
+        ),
         actions: [
-          IconButton(icon: const Icon(Icons.save), onPressed: _save),
+          IconButton(
+            icon: const Icon(Icons.save),
+            onPressed: () {
+              _save();
+            },
+          ),
           IconButton(icon: const Icon(Icons.delete), onPressed: _delete),
           IconButton(
             icon: const Icon(Icons.font_download),
@@ -193,6 +233,7 @@ class _EditNotePageState extends State<EditNotePage> {
                 hintText: tr('title'),
                 border: InputBorder.none,
               ),
+              style: themeFonts[font].font(),
             ),
           ),
           Divider(
